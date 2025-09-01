@@ -1,0 +1,25 @@
+# Core Banking Infrastructure Configuration
+# This file defines the parameters for cost estimation
+
+# Primary scaling factor - number of banking customers
+customer_count: 100000  # Can be: 10000, 50000, 100000, 500000, 1000000
+
+# Architecture variant selection
+# Options: 
+#   - single_region_3az: Single region with 3 availability zones
+#   - multi_region_3az: Multi-region setup (3 regions, each with 3 AZs)
+architecture_variant: single_region_3az
+
+# Backup and retention policies
+backup_retention_days: 30    # How many days to retain backups
+log_retention_days: 90       # How many days to retain logs
+
+# Non-production environment scaling factors
+# These determine the size of non-prod environments relative to production
+dev_env_scale: 0.3       # Development environment at 30% of production
+staging_env_scale: 0.5   # Staging environment at 50% of production
+uat_env_scale: 0.4       # UAT environment at 40% of production
+
+# Optional: Override specific metrics (if not specified, will be calculated)
+# base_tps_override: 50  # Override calculated TPS
+# peak_multiplier: 3     # Peak traffic multiplier (default is 3x)

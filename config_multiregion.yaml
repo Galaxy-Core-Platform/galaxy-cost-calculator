@@ -1,0 +1,17 @@
+# Core Banking Infrastructure Configuration - Multi-Region Example
+# This configuration shows a larger deployment with multi-region architecture
+
+# Primary scaling factor - 500,000 banking customers
+customer_count: 500000
+
+# Multi-region architecture for better resilience
+architecture_variant: multi_region_3az
+
+# Enhanced retention for compliance
+backup_retention_days: 60    # 60 days for regulatory compliance
+log_retention_days: 365      # 1 year log retention
+
+# Non-production environment scaling
+dev_env_scale: 0.3
+staging_env_scale: 0.5
+uat_env_scale: 0.4

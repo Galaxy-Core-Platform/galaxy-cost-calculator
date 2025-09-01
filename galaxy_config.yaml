@@ -1,0 +1,24 @@
+# Galaxy Platform Cost Estimation Configuration
+# Specific to the actual Galaxy microservices architecture
+
+# Number of banking customers
+customer_count: 100000
+
+# Architecture deployment variant
+# single_region_3az or multi_region_3az
+architecture_variant: single_region_3az
+
+# Data retention policies
+backup_retention_days: 30
+log_retention_days: 90
+
+# Galaxy-specific services to include in estimation
+# All services are included by default
+services:
+  - polaris    # Configuration Service
+  - orion      # Retail Customer Service
+  - nebula     # Contact Log Service
+  - horizon    # BackOffice Application
+  - draco      # RBAC Service
+  - aphelion   # Analytics Service
+  - titan      # Transaction Processing
