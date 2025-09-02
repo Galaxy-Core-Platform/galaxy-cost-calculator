@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  galaxy-calculator:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./pricing_aws.yaml:/app/pricing_aws.yaml:ro
+      - ./pricing_gcp.yaml:/app/pricing_gcp.yaml:ro
+      - ./pricing_azure.yaml:/app/pricing_azure.yaml:ro
+      - ./galaxy_config.yaml:/app/galaxy_config.yaml:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

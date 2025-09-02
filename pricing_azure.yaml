@@ -1,0 +1,133 @@
+# Microsoft Azure Pricing Configuration
+# Prices are in USD per month unless specified otherwise
+# Last updated: 2024-01
+# Region: East US
+
+provider: Azure
+region: eastus
+currency: USD
+
+compute:
+  # Virtual Machines (Pay-as-you-go)
+  vcpu_hour: 0.048  # Average across VM types (B, D, F series)
+  memory_gb_hour: 0.006  # Average memory cost
+  
+  # Load Balancer
+  load_balancer: 25.00  # Standard Load Balancer per month
+  load_balancer_rules: 0  # First 5 rules free
+  
+  # Container Services
+  container_instance: 0.043  # Container Instances per vCPU-hour
+  aks_cluster: 73.00  # Per AKS cluster per month
+
+database:
+  # Azure Database for PostgreSQL
+  postgres_instance:
+    small: 201.00    # B_Gen5_1 (1 vCore, 5GB RAM)
+    medium: 402.00   # B_Gen5_2 (2 vCore, 10GB RAM)
+    large: 785.00    # GP_Gen5_4 (4 vCore, 20GB RAM)
+    xlarge: 1570.00  # GP_Gen5_8 (8 vCore, 40GB RAM)
+  
+  # Storage
+  storage_gb: 0.115  # General Purpose storage per GB-month
+  iops: 0.05  # Per provisioned IOPS
+  backup_gb: 0.095  # Backup storage per GB-month (LRS)
+  
+  # Read Replica
+  replica_multiplier: 1.0  # Same cost as primary
+
+storage:
+  # Managed Disks
+  block_ssd_gb: 0.12   # Premium SSD per GB-month
+  block_hdd_gb: 0.04   # Standard HDD per GB-month
+  
+  # Blob Storage
+  object_hot_gb: 0.0184      # Hot tier per GB-month
+  object_cool_gb: 0.01        # Cool tier per GB-month
+  object_archive_gb: 0.00099  # Archive tier per GB-month
+  
+  # Azure Files
+  file_storage_gb: 0.06  # Standard tier per GB-month (LRS)
+
+network:
+  # Data Transfer
+  data_transfer_gb: 0.087  # Internet egress (5-10TB zone 1)
+  inter_region_gb: 0.02    # Inter-region transfer
+  inter_az_gb: 0  # No charge for availability zone transfer
+  
+  # VPN & ExpressRoute
+  vpn_connection: 45.00  # VPN Gateway per month (Basic)
+  express_route_port: 325.00  # 1Gbps port per month
+  
+  # Azure CDN
+  cdn_gb: 0.081  # Standard Microsoft CDN per GB
+
+cache_queue:
+  # Azure Cache for Redis
+  redis_gb: 23.00  # Basic tier per GB per month
+  
+  # Service Bus (Kafka alternative)
+  service_bus_million_messages: 0.80  # Standard tier
+  
+  # Storage Queues
+  queue_million_operations: 0.40  # Per million operations
+
+api_gateway:
+  # API Management
+  million_requests: 3.50  # Consumption tier per million calls
+  data_transfer_gb: 0.087  # Data transfer out
+  
+  # SignalR Service (WebSocket)
+  websocket_million_messages: 1.00  # Per million messages
+  websocket_unit_day: 1.00  # Per unit per day
+
+security:
+  # Key Vault
+  kms_key: 0.03  # Per key per month
+  kms_requests_10k: 0.03  # Per 10,000 operations
+  
+  # Dedicated HSM
+  hsm_instance: 3879.00  # Per HSM per month
+  
+  # Web Application Firewall
+  waf_gateway: 20.00  # Per gateway per month
+  waf_million_requests: 0.60  # Per million requests
+  
+  # DDoS Protection
+  ddos_protection_basic: 0  # Included
+  ddos_protection_standard: 2944.00  # Per month
+
+observability:
+  # Azure Monitor
+  metrics_million_datapoints: 0.258  # Custom metrics
+  logs_gb_ingested: 2.30  # Log Analytics ingestion
+  logs_gb_stored: 0.10   # Per GB retained per month
+  
+  # Application Insights
+  traces_gb: 2.30  # Per GB ingested
+  traces_million: 5.00  # Per million traces (estimated)
+  
+  # APM
+  apm_host: 23.00  # Per node per month
+
+backup_dr:
+  # Azure Backup
+  snapshot_gb: 0.05  # Per GB-month (LRS)
+  cross_region_copy_gb: 0.024  # GRS storage
+  
+  # Site Recovery
+  site_recovery_vm: 25.00  # Per protected instance
+  
+  # Point-in-time Recovery
+  pitr_enabled_multiplier: 1.0  # Included in database backup
+
+cicd:
+  # Azure DevOps
+  build_minutes: 0.0006  # Per minute (Microsoft-hosted)
+  
+  # Container Registry
+  artifact_storage_gb: 0.10  # Basic tier per GB-month
+  container_registry_gb: 0.167  # Basic tier per GB-month
+  
+  # Azure Pipelines
+  pipeline_execution: 0  # Free tier (1800 minutes/month)

@@ -1,0 +1,71 @@
+Service,Operation,Volume_Per_Customer_Month,Total_Volume_Month,Unit,Bytes_Per_Op,Total_GB_Month,Description
+PROXIMA,Post Transaction Ledger Entry,100.0,100000000,operations,421,39.209,Double-entry bookkeeping entries
+PROXIMA,Account Balance Query,200.0,200000000,operations,0,0,Real-time balance checks
+PROXIMA,Statement Generation,1.0,1000000,operations,0,0,Monthly/weekly statements
+PROXIMA,Account Opening,0.01,10000,operations,383,0.004,New account creation
+PROXIMA,Account Closure,0.002,2000,operations,100,0.0,Account termination
+TITAN,Payment Transaction,50.0,50000000,operations,539,25.099,Outgoing payments
+TITAN,Transfer Transaction,30.0,30000000,operations,539,15.059,Internal transfers
+TITAN,Deposit Transaction,15.0,15000000,operations,539,7.53,Incoming deposits
+TITAN,Withdrawal Transaction,5.0,5000000,operations,539,2.51,Cash withdrawals
+TITAN,Batch Payment Processing,0.0,0,operations,539,0.0,Bulk payment files
+TITAN,Transaction Status Check,150.0,150000000,operations,0,0,Status queries
+TITAN,Transaction Reversal,0.1,100000,operations,570,0.053,Transaction corrections
+TITAN,Pending Transaction Retry,5.0,5000000,operations,312,1.453,Failed transaction retries
+ORION,Customer Registration,0.01,10000,operations,1010,0.009,New customer onboarding
+ORION,Profile Update,0.5,500000,operations,1010,0.47,Customer data changes
+ORION,Address Change,0.1,100000,operations,300,0.028,Address updates
+ORION,Contact Details Update,0.2,200000,operations,200,0.037,Phone/email updates
+ORION,Preference Update,0.3,300000,operations,271,0.076,Settings and preferences
+ORION,Customer Search,5.0,5000000,operations,0,0,Customer lookups
+ORION,Document Upload,0.05,50000,operations,500,0.023,KYC document uploads
+QUASAR,KYC Verification,0.02,20000,operations,892,0.017,Identity verification
+QUASAR,KYC Renewal,0.01,10000,operations,892,0.008,Periodic KYC refresh
+QUASAR,AML Check,0.1,100000,operations,765,0.071,Anti-money laundering checks
+QUASAR,Risk Score Update,0.5,500000,operations,150,0.07,Risk profile updates
+QUASAR,Sanctions Screening,0.1,100000,operations,765,0.071,Sanctions list checks
+QUASAR,PEP Check,0.05,50000,operations,400,0.019,Politically exposed person checks
+QUASAR,Enhanced Due Diligence,0.0,0,operations,2000,0.0,High-risk customer reviews
+KRYPTON,Collateral Registration,0.005,5000,operations,892,0.004,Asset registration
+KRYPTON,Collateral Valuation,0.01,10000,operations,504,0.005,Asset valuation updates
+KRYPTON,Insurance Update,0.008,8000,operations,200,0.001,Insurance status updates
+KRYPTON,LTV Calculation,0.05,50000,operations,0,0,Loan-to-value calculations
+ASTER,Loan Approval Workflow,0.03,30000,operations,700,0.02,Credit approval process
+ASTER,Limit Increase Workflow,0.02,20000,operations,700,0.013,Credit limit changes
+ASTER,Account Closure Approval,0.005,5000,operations,700,0.003,Account closure approvals
+ASTER,High Value Transaction Approval,0.05,50000,operations,612,0.028,Large transaction approvals
+ASTER,Exception Approval,0.01,10000,operations,612,0.006,Policy exception approvals
+ASTER,Workflow Step Completion,0.3,300000,operations,612,0.171,Individual approval steps
+NEBULA,Customer Call Log,0.8,800000,operations,1354,1.009,Phone call records
+NEBULA,Email Inquiry,0.5,500000,operations,1354,0.631,Email communications
+NEBULA,Chat Session,0.7,700000,operations,1354,0.883,Chat support logs
+NEBULA,Complaint Registration,0.05,50000,operations,1354,0.063,Formal complaints
+NEBULA,Follow-up Interaction,2.0,2000000,operations,440,0.82,Follow-up activities
+NEBULA,Relationship Manager Note,0.0,0,operations,500,0.0,RM activity notes
+APHELION,Daily Metrics Calculation,30.0,30000000,operations,434,12.126,Daily aggregated metrics
+APHELION,Transaction Analytics Event,100.0,100000000,operations,496,46.194,Transaction behavior tracking
+APHELION,Login Event,50.0,50000000,operations,200,9.313,Authentication tracking
+APHELION,Click Stream Event,200.0,200000000,operations,150,27.94,UI interaction tracking
+APHELION,Risk Score Calculation,1.0,1000000,operations,300,0.279,Risk model execution
+APHELION,Report Generation,0.1,100000,operations,0,0,Analytics reports
+APHELION,Profitability Analysis,0.0,0,operations,500,0.0,Customer profitability
+PULSAR,Transaction Webhook,30.0,30000000,operations,1506,42.077,Transaction notifications
+PULSAR,Account Alert Webhook,10.0,10000000,operations,800,7.451,Account event alerts
+PULSAR,Status Update Webhook,5.0,5000000,operations,600,2.794,Status change notifications
+PULSAR,Webhook Subscription Create,0.05,50000,operations,431,0.02,New webhook subscriptions
+PULSAR,Webhook Retry,1.0,1000000,operations,500,0.466,Failed webhook retries
+PULSAR,Batch Notification,0.0,0,operations,5000,0.0,Bulk notifications
+HORIZON,Customer View,2.0,2000000,operations,396,0.738,Customer profile views
+HORIZON,Transaction Search,1.0,1000000,operations,396,0.369,Transaction queries
+HORIZON,Report Access,0.1,100000,operations,396,0.037,Report viewing
+HORIZON,Bulk Operation,0.01,10000,operations,1000,0.009,Batch operations
+HORIZON,Export Activity,0.05,50000,operations,396,0.018,Data exports
+HORIZON,Dashboard View,5.0,5000000,operations,0,0,Dashboard access
+POLARIS,Config Read,100.0,100000000,operations,0,0,Configuration lookups
+POLARIS,Config Update,0.001,1000,operations,1067,0.001,Configuration changes
+POLARIS,Feature Flag Toggle,0.0005,500,operations,200,0.0,Feature flag changes
+DRACO,Authentication,50.0,50000000,operations,0,0,User authentication
+DRACO,Authorization Check,200.0,200000000,operations,0,0,Permission checks
+DRACO,Role Assignment,0.01,10000,operations,128,0.001,Role changes
+DRACO,Permission Update,0.005,5000,operations,128,0.001,Permission modifications
+DRACO,Audit Log Entry,10.0,10000000,operations,250,2.328,Security audit logs

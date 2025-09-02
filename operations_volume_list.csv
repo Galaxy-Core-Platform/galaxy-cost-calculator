@@ -1,0 +1,64 @@
+Service,Operation,Volume per 1M Customers/Month,Unit,Bytes per Operation,Total GB/Month
+PROXIMA,Post Transaction Ledger Entry,100000000,entries,421,42.1
+PROXIMA,Account Balance Query,200000000,queries,0,0
+PROXIMA,Statement Generation,1000000,statements,0,0
+PROXIMA,Account Opening,10000,accounts,383,0.004
+PROXIMA,Account Closure,2000,accounts,100,0.0002
+TITAN,Payment Transaction,50000000,transactions,539,26.95
+TITAN,Transfer Transaction,30000000,transactions,539,16.17
+TITAN,Deposit Transaction,15000000,transactions,539,8.09
+TITAN,Withdrawal Transaction,5000000,transactions,539,2.70
+TITAN,Transaction Status Check,150000000,queries,0,0
+TITAN,Transaction Reversal,100000,transactions,570,0.057
+TITAN,Pending Transaction Retry,5000000,retries,312,1.56
+ORION,Customer Registration,10000,registrations,1010,0.01
+ORION,Profile Update,500000,updates,1010,0.51
+ORION,Address Change,100000,updates,300,0.03
+ORION,Contact Details Update,200000,updates,200,0.04
+ORION,Preference Update,300000,updates,271,0.08
+ORION,Customer Search,5000000,queries,0,0
+ORION,Document Upload,50000,uploads,500,0.025
+QUASAR,KYC Verification,20000,verifications,892,0.018
+QUASAR,KYC Renewal,10000,renewals,892,0.009
+QUASAR,AML Check,100000,checks,765,0.077
+QUASAR,Risk Score Update,500000,updates,150,0.075
+QUASAR,Sanctions Screening,100000,screenings,765,0.077
+QUASAR,PEP Check,50000,checks,400,0.02
+KRYPTON,Collateral Registration,5000,registrations,892,0.004
+KRYPTON,Collateral Valuation,10000,valuations,504,0.005
+KRYPTON,Insurance Update,8000,updates,200,0.002
+KRYPTON,LTV Calculation,50000,calculations,0,0
+ASTER,Loan Approval Workflow,30000,workflows,700,0.021
+ASTER,Limit Increase Workflow,20000,workflows,700,0.014
+ASTER,Account Closure Approval,5000,workflows,700,0.004
+ASTER,High Value Transaction Approval,50000,approvals,612,0.031
+ASTER,Workflow Step Completion,300000,steps,612,0.184
+NEBULA,Customer Call Log,800000,calls,1354,1.08
+NEBULA,Email Inquiry,500000,emails,1354,0.68
+NEBULA,Chat Session,700000,chats,1354,0.95
+NEBULA,Complaint Registration,50000,complaints,1354,0.068
+NEBULA,Follow-up Interaction,2000000,interactions,440,0.88
+APHELION,Daily Metrics Calculation,30000000,metrics,434,13.02
+APHELION,Transaction Analytics Event,100000000,events,496,49.6
+APHELION,Login Event,50000000,events,200,10.0
+APHELION,Click Stream Event,200000000,events,150,30.0
+APHELION,Risk Score Calculation,1000000,calculations,300,0.3
+APHELION,Report Generation,100000,reports,0,0
+PULSAR,Transaction Webhook,30000000,webhooks,1506,45.18
+PULSAR,Account Alert Webhook,10000000,webhooks,800,8.0
+PULSAR,Status Update Webhook,5000000,webhooks,600,3.0
+PULSAR,Webhook Subscription Create,50000,subscriptions,431,0.022
+PULSAR,Webhook Retry,1000000,retries,500,0.5
+HORIZON,Customer View,2000000,views,396,0.79
+HORIZON,Transaction Search,1000000,searches,396,0.40
+HORIZON,Report Access,100000,accesses,396,0.04
+HORIZON,Bulk Operation,10000,operations,1000,0.01
+HORIZON,Export Activity,50000,exports,396,0.02
+POLARIS,Config Read,100000000,reads,0,0
+POLARIS,Config Update,1000,updates,1067,0.001
+POLARIS,Feature Flag Toggle,500,toggles,200,0.0001
+DRACO,Authentication,50000000,auths,0,0
+DRACO,Authorization Check,200000000,checks,0,0
+DRACO,Role Assignment,10000,assignments,128,0.001
+DRACO,Permission Update,5000,updates,128,0.001
+DRACO,Audit Log Entry,10000000,entries,250,2.5

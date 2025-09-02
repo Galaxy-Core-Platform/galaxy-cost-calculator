@@ -1,0 +1,130 @@
+# Google Cloud Platform Pricing Configuration
+# Prices are in USD per month unless specified otherwise
+# Last updated: 2024-01
+# Region: us-central1 (Iowa)
+
+provider: GCP
+region: us-central1
+currency: USD
+
+compute:
+  # Compute Engine (On-Demand)
+  vcpu_hour: 0.0315  # Average across machine types (n2, e2)
+  memory_gb_hour: 0.0042  # Average memory cost
+  
+  # Load Balancer
+  load_balancer: 18.00  # Per forwarding rule per month
+  load_balancer_processed_gb: 0.008  # Per GB processed
+  
+  # Container Services
+  container_instance: 0.035  # Cloud Run per vCPU-hour
+  gke_cluster: 72.00  # Per GKE cluster per month (zonal)
+
+database:
+  # Cloud SQL PostgreSQL
+  postgres_instance:
+    small: 149.00    # db-f1-micro (1 vCPU, 3.75GB RAM)
+    medium: 298.00   # db-g1-small (2 vCPU, 7.5GB RAM)
+    large: 596.00    # db-n1-standard-2 (2 vCPU, 7.5GB RAM)
+    xlarge: 1192.00  # db-n1-standard-4 (4 vCPU, 15GB RAM)
+  
+  # Storage
+  storage_gb: 0.17  # SSD storage per GB-month
+  iops: 0  # IOPS included in GCP
+  backup_gb: 0.08  # Backup storage per GB-month
+  
+  # Read Replica
+  replica_multiplier: 0.7  # Reduced cost for read replicas
+
+storage:
+  # Persistent Disk
+  block_ssd_gb: 0.17   # SSD persistent disk per GB-month
+  block_hdd_gb: 0.04   # Standard persistent disk per GB-month
+  
+  # Cloud Storage
+  object_standard_gb: 0.020     # Standard storage per GB-month
+  object_nearline_gb: 0.010     # Nearline storage per GB-month
+  object_coldline_gb: 0.004     # Coldline storage per GB-month
+  object_archive_gb: 0.0012     # Archive storage per GB-month
+  
+  # Filestore
+  file_storage_gb: 0.20  # Basic tier per GB-month
+
+network:
+  # Data Transfer
+  data_transfer_gb: 0.12   # Internet egress (1-10TB)
+  inter_region_gb: 0.01    # Inter-region within US
+  inter_zone_gb: 0.01      # Inter-zone transfer
+  
+  # VPN & Interconnect
+  vpn_connection: 36.50    # Per VPN tunnel per month
+  interconnect_port: 306.00  # 1Gbps VLAN attachment per month
+  
+  # Cloud CDN
+  cdn_gb: 0.08  # Cache egress per GB (North America)
+
+cache_queue:
+  # Memorystore Redis
+  redis_gb: 32.00  # Basic tier per GB per month
+  
+  # Pub/Sub (Kafka alternative)
+  pubsub_million_messages: 40.00  # Per million messages
+  
+  # Cloud Tasks (Queue)
+  tasks_million: 0.40  # Per million operations
+
+api_gateway:
+  # API Gateway
+  million_requests: 3.00  # Per million requests
+  data_transfer_gb: 0.12  # Data transfer out
+  
+  # WebSocket (via Cloud Run)
+  websocket_million_messages: 1.00  # Estimated
+  websocket_million_minutes: 0.24   # Connection minutes
+
+security:
+  # Cloud KMS
+  kms_key: 0.06  # Per key version per month
+  kms_requests_10k: 0.03  # Per 10,000 operations
+  
+  # Cloud HSM
+  hsm_instance: 1841.00  # Per HSM instance per month
+  
+  # Cloud Armor (WAF)
+  security_policy: 5.00  # Per policy per month
+  waf_million_requests: 0.75  # Per million requests
+  
+  # DDoS Protection
+  ddos_protection_standard: 0  # Included
+  ddos_protection_advanced: 0  # Included with Cloud Armor
+
+observability:
+  # Cloud Monitoring
+  metrics_million_datapoints: 0.258  # Metrics ingestion
+  logs_gb_ingested: 0.50  # Cloud Logging ingestion
+  logs_gb_stored: 0.01   # Per GB stored per month
+  
+  # Cloud Trace
+  traces_million: 0.20  # Per million spans
+  
+  # APM (via third-party)
+  apm_host: 30.00  # Estimated per host
+
+backup_dr:
+  # Persistent Disk Snapshots
+  snapshot_gb: 0.026  # Per GB-month
+  cross_region_copy_gb: 0.02  # Cross-region snapshot
+  
+  # Point-in-time Recovery
+  pitr_enabled_multiplier: 1.2  # Additional backup costs
+
+cicd:
+  # Cloud Build
+  build_minutes: 0.003  # Per build minute
+  
+  # Artifact Registry
+  artifact_storage_gb: 0.10  # Per GB-month
+  container_registry_gb: 0.10  # Per GB-month
+  
+  # Cloud Deploy
+  pipeline_execution: 0  # Free tier available

@@ -1,0 +1,130 @@
+# AWS Pricing Configuration
+# Prices are in USD per month unless specified otherwise
+# Last updated: 2024-01
+# Region: US-East-1 (Northern Virginia)
+
+provider: AWS
+region: us-east-1
+currency: USD
+
+compute:
+  # EC2 Instance Pricing (On-Demand, Linux)
+  vcpu_hour: 0.0464  # Average across instance types (t3, m5, c5)
+  memory_gb_hour: 0.0058  # Average memory cost
+  
+  # Application Load Balancer
+  load_balancer: 22.50  # Per ALB per month (base cost)
+  load_balancer_lcu_hour: 0.008  # Per LCU-hour
+  
+  # Container Services
+  container_instance: 0.04  # ECS/Fargate per vCPU-hour
+  eks_cluster: 73.00  # Per EKS cluster per month
+
+database:
+  # RDS PostgreSQL (On-Demand)
+  postgres_instance:
+    small: 182.00    # db.t3.small (2 vCPU, 2GB RAM)
+    medium: 365.00   # db.t3.medium (2 vCPU, 4GB RAM)
+    large: 730.00    # db.m5.large (2 vCPU, 8GB RAM)
+    xlarge: 1460.00  # db.m5.xlarge (4 vCPU, 16GB RAM)
+  
+  # Storage
+  storage_gb: 0.115  # GP3 storage per GB-month
+  iops: 0.08  # Per provisioned IOPS over baseline
+  backup_gb: 0.095  # Automated backup storage per GB-month
+  
+  # Read Replica
+  replica_multiplier: 1.0  # Same cost as primary in AWS
+
+storage:
+  # EBS Volumes
+  block_ssd_gb: 0.08   # GP3 SSD per GB-month
+  block_hdd_gb: 0.045  # ST1 HDD per GB-month
+  
+  # S3 Storage
+  object_standard_gb: 0.023   # S3 Standard per GB-month
+  object_infrequent_gb: 0.0125  # S3 IA per GB-month
+  object_archive_gb: 0.004    # S3 Glacier Instant per GB-month
+  object_deep_archive_gb: 0.00099  # S3 Glacier Deep Archive
+  
+  # EFS
+  file_storage_gb: 0.30  # EFS Standard per GB-month
+
+network:
+  # Data Transfer
+  data_transfer_gb: 0.09   # Internet egress (first 10TB)
+  inter_region_gb: 0.02    # Inter-region transfer
+  inter_az_gb: 0.01        # Inter-AZ transfer
+  
+  # VPN & Direct Connect
+  vpn_connection: 36.00    # Per VPN connection per month
+  direct_connect_port: 295.00  # 1Gbps port per month
+  
+  # CloudFront CDN
+  cdn_gb: 0.085  # Per GB transferred (US/Europe)
+
+cache_queue:
+  # ElastiCache Redis
+  redis_gb: 13.00  # Per GB memory per month (cache.t3.micro pricing)
+  
+  # Amazon MSK (Kafka)
+  kafka_broker: 137.00  # kafka.m5.large per month
+  
+  # SQS
+  sqs_million_requests: 0.40  # Per million requests
+
+api_gateway:
+  # API Gateway
+  million_requests: 3.50  # REST API per million requests
+  data_transfer_gb: 0.09  # Data transfer out
+  
+  # WebSocket
+  websocket_million_messages: 1.00  # Per million messages
+  websocket_million_minutes: 0.25   # Connection minutes
+
+security:
+  # KMS
+  kms_key: 1.00  # Per key per month
+  kms_requests_10k: 0.03  # Per 10,000 requests
+  
+  # CloudHSM
+  hsm_instance: 1584.00  # Per HSM instance per month
+  
+  # WAF
+  waf_web_acl: 5.00  # Per web ACL per month
+  waf_million_requests: 0.60  # Per million requests
+  
+  # Shield
+  ddos_protection_standard: 0  # Free tier
+  ddos_protection_advanced: 3000.00  # Shield Advanced flat fee
+
+observability:
+  # CloudWatch
+  metrics_million_datapoints: 0.30  # Custom metrics
+  logs_gb_ingested: 0.50  # Per GB ingested
+  logs_gb_stored: 0.03   # Per GB stored per month
+  
+  # X-Ray
+  traces_million: 5.00  # Per million traces
+  
+  # Application Insights
+  apm_host: 31.00  # Per host per month
+
+backup_dr:
+  # AWS Backup
+  snapshot_gb: 0.05  # EBS snapshot per GB-month
+  cross_region_copy_gb: 0.02  # Cross-region snapshot copy
+  
+  # Point-in-time Recovery
+  pitr_enabled_multiplier: 1.0  # Included in RDS backup
+
+cicd:
+  # CodeBuild
+  build_minutes: 0.005  # Per build minute (general1.small)
+  
+  # CodeArtifact & ECR
+  artifact_storage_gb: 0.10  # Per GB-month
+  container_registry_gb: 0.10  # ECR per GB-month
+  
+  # CodePipeline
+  pipeline_execution: 1.00  # Per active pipeline per month

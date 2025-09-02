@@ -1,0 +1,528 @@
+customer_segments:
+  retail:
+    count: 1000000
+    description: Individual retail banking customers
+    characteristics:
+      avg_transactions_month: 100
+      avg_contacts_month: 2
+      digital_adoption: high
+      product_complexity: low
+  sme:
+    count: 100000
+    description: Small and medium enterprise customers
+    characteristics:
+      avg_transactions_month: 500
+      avg_contacts_month: 8
+      digital_adoption: medium
+      product_complexity: medium
+  corporate:
+    count: 10000
+    description: Large corporate customers
+    characteristics:
+      avg_transactions_month: 5000
+      avg_contacts_month: 20
+      digital_adoption: high
+      product_complexity: high
+operations:
+  PROXIMA:
+    Post Transaction Ledger Entry:
+      retail_volume: 100
+      sme_volume: 500
+      corporate_volume: 5000
+      bytes_per_operation: 421
+      is_write: true
+      description: Double-entry bookkeeping entries
+    Account Balance Query:
+      retail_volume: 200
+      sme_volume: 1000
+      corporate_volume: 10000
+      bytes_per_operation: 0
+      is_write: false
+      description: Real-time balance checks
+    Statement Generation:
+      retail_volume: 1
+      sme_volume: 5
+      corporate_volume: 20
+      bytes_per_operation: 0
+      is_write: false
+      description: Monthly/weekly statements
+    Account Opening:
+      retail_volume: 0.01
+      sme_volume: 0.05
+      corporate_volume: 0.2
+      bytes_per_operation: 383
+      is_write: true
+      description: New account creation
+    Account Closure:
+      retail_volume: 0.002
+      sme_volume: 0.01
+      corporate_volume: 0.05
+      bytes_per_operation: 100
+      is_write: true
+      description: Account termination
+  TITAN:
+    Payment Transaction:
+      retail_volume: 50
+      sme_volume: 200
+      corporate_volume: 2000
+      bytes_per_operation: 539
+      is_write: true
+      description: Outgoing payments
+    Transfer Transaction:
+      retail_volume: 30
+      sme_volume: 150
+      corporate_volume: 1500
+      bytes_per_operation: 539
+      is_write: true
+      description: Internal transfers
+    Deposit Transaction:
+      retail_volume: 15
+      sme_volume: 100
+      corporate_volume: 500
+      bytes_per_operation: 539
+      is_write: true
+      description: Incoming deposits
+    Withdrawal Transaction:
+      retail_volume: 5
+      sme_volume: 50
+      corporate_volume: 200
+      bytes_per_operation: 539
+      is_write: true
+      description: Cash withdrawals
+    Batch Payment Processing:
+      retail_volume: 0
+      sme_volume: 10
+      corporate_volume: 100
+      bytes_per_operation: 539
+      is_write: true
+      description: Bulk payment files
+    Transaction Status Check:
+      retail_volume: 150
+      sme_volume: 500
+      corporate_volume: 5000
+      bytes_per_operation: 0
+      is_write: false
+      description: Status queries
+    Transaction Reversal:
+      retail_volume: 0.1
+      sme_volume: 0.5
+      corporate_volume: 5
+      bytes_per_operation: 570
+      is_write: true
+      description: Transaction corrections
+    Pending Transaction Retry:
+      retail_volume: 5
+      sme_volume: 20
+      corporate_volume: 200
+      bytes_per_operation: 312
+      is_write: true
+      description: Failed transaction retries
+  ORION:
+    Customer Registration:
+      retail_volume: 0.01
+      sme_volume: 0.05
+      corporate_volume: 0.02
+      bytes_per_operation: 1010
+      is_write: true
+      description: New customer onboarding
+    Profile Update:
+      retail_volume: 0.5
+      sme_volume: 2
+      corporate_volume: 5
+      bytes_per_operation: 1010
+      is_write: true
+      description: Customer data changes
+    Address Change:
+      retail_volume: 0.1
+      sme_volume: 0.5
+      corporate_volume: 1
+      bytes_per_operation: 300
+      is_write: true
+      description: Address updates
+    Contact Details Update:
+      retail_volume: 0.2
+      sme_volume: 1
+      corporate_volume: 2
+      bytes_per_operation: 200
+      is_write: true
+      description: Phone/email updates
+    Preference Update:
+      retail_volume: 0.3
+      sme_volume: 1
+      corporate_volume: 3
+      bytes_per_operation: 271
+      is_write: true
+      description: Settings and preferences
+    Customer Search:
+      retail_volume: 5
+      sme_volume: 20
+      corporate_volume: 100
+      bytes_per_operation: 0
+      is_write: false
+      description: Customer lookups
+    Document Upload:
+      retail_volume: 0.05
+      sme_volume: 0.5
+      corporate_volume: 2
+      bytes_per_operation: 500
+      is_write: true
+      description: KYC document uploads
+  QUASAR:
+    KYC Verification:
+      retail_volume: 0.02
+      sme_volume: 0.1
+      corporate_volume: 0.5
+      bytes_per_operation: 892
+      is_write: true
+      description: Identity verification
+    KYC Renewal:
+      retail_volume: 0.01
+      sme_volume: 0.05
+      corporate_volume: 0.2
+      bytes_per_operation: 892
+      is_write: true
+      description: Periodic KYC refresh
+    AML Check:
+      retail_volume: 0.1
+      sme_volume: 1
+      corporate_volume: 10
+      bytes_per_operation: 765
+      is_write: true
+      description: Anti-money laundering checks
+    Risk Score Update:
+      retail_volume: 0.5
+      sme_volume: 2
+      corporate_volume: 10
+      bytes_per_operation: 150
+      is_write: true
+      description: Risk profile updates
+    Sanctions Screening:
+      retail_volume: 0.1
+      sme_volume: 1
+      corporate_volume: 10
+      bytes_per_operation: 765
+      is_write: true
+      description: Sanctions list checks
+    PEP Check:
+      retail_volume: 0.05
+      sme_volume: 0.5
+      corporate_volume: 5
+      bytes_per_operation: 400
+      is_write: true
+      description: Politically exposed person checks
+    Enhanced Due Diligence:
+      retail_volume: 0
+      sme_volume: 0.1
+      corporate_volume: 2
+      bytes_per_operation: 2000
+      is_write: true
+      description: High-risk customer reviews
+  KRYPTON:
+    Collateral Registration:
+      retail_volume: 0.005
+      sme_volume: 0.1
+      corporate_volume: 0.5
+      bytes_per_operation: 892
+      is_write: true
+      description: Asset registration
+    Collateral Valuation:
+      retail_volume: 0.01
+      sme_volume: 0.2
+      corporate_volume: 1
+      bytes_per_operation: 504
+      is_write: true
+      description: Asset valuation updates
+    Insurance Update:
+      retail_volume: 0.008
+      sme_volume: 0.1
+      corporate_volume: 0.5
+      bytes_per_operation: 200
+      is_write: true
+      description: Insurance status updates
+    LTV Calculation:
+      retail_volume: 0.05
+      sme_volume: 1
+      corporate_volume: 5
+      bytes_per_operation: 0
+      is_write: false
+      description: Loan-to-value calculations
+  ASTER:
+    Loan Approval Workflow:
+      retail_volume: 0.03
+      sme_volume: 0.5
+      corporate_volume: 2
+      bytes_per_operation: 700
+      is_write: true
+      description: Credit approval process
+    Limit Increase Workflow:
+      retail_volume: 0.02
+      sme_volume: 0.3
+      corporate_volume: 1
+      bytes_per_operation: 700
+      is_write: true
+      description: Credit limit changes
+    Account Closure Approval:
+      retail_volume: 0.005
+      sme_volume: 0.02
+      corporate_volume: 0.1
+      bytes_per_operation: 700
+      is_write: true
+      description: Account closure approvals
+    High Value Transaction Approval:
+      retail_volume: 0.05
+      sme_volume: 1
+      corporate_volume: 10
+      bytes_per_operation: 612
+      is_write: true
+      description: Large transaction approvals
+    Exception Approval:
+      retail_volume: 0.01
+      sme_volume: 0.5
+      corporate_volume: 5
+      bytes_per_operation: 612
+      is_write: true
+      description: Policy exception approvals
+    Workflow Step Completion:
+      retail_volume: 0.3
+      sme_volume: 5
+      corporate_volume: 30
+      bytes_per_operation: 612
+      is_write: true
+      description: Individual approval steps
+  NEBULA:
+    Customer Call Log:
+      retail_volume: 0.8
+      sme_volume: 2
+      corporate_volume: 5
+      bytes_per_operation: 1354
+      is_write: true
+      description: Phone call records
+    Email Inquiry:
+      retail_volume: 0.5
+      sme_volume: 3
+      corporate_volume: 10
+      bytes_per_operation: 1354
+      is_write: true
+      description: Email communications
+    Chat Session:
+      retail_volume: 0.7
+      sme_volume: 1
+      corporate_volume: 2
+      bytes_per_operation: 1354
+      is_write: true
+      description: Chat support logs
+    Complaint Registration:
+      retail_volume: 0.05
+      sme_volume: 0.2
+      corporate_volume: 0.5
+      bytes_per_operation: 1354
+      is_write: true
+      description: Formal complaints
+    Follow-up Interaction:
+      retail_volume: 2
+      sme_volume: 8
+      corporate_volume: 20
+      bytes_per_operation: 440
+      is_write: true
+      description: Follow-up activities
+    Relationship Manager Note:
+      retail_volume: 0
+      sme_volume: 5
+      corporate_volume: 20
+      bytes_per_operation: 500
+      is_write: true
+      description: RM activity notes
+  APHELION:
+    Daily Metrics Calculation:
+      retail_volume: 30
+      sme_volume: 30
+      corporate_volume: 30
+      bytes_per_operation: 434
+      is_write: true
+      description: Daily aggregated metrics
+    Transaction Analytics Event:
+      retail_volume: 100
+      sme_volume: 500
+      corporate_volume: 5000
+      bytes_per_operation: 496
+      is_write: true
+      description: Transaction behavior tracking
+    Login Event:
+      retail_volume: 50
+      sme_volume: 100
+      corporate_volume: 200
+      bytes_per_operation: 200
+      is_write: true
+      description: Authentication tracking
+    Click Stream Event:
+      retail_volume: 200
+      sme_volume: 500
+      corporate_volume: 1000
+      bytes_per_operation: 150
+      is_write: true
+      description: UI interaction tracking
+    Risk Score Calculation:
+      retail_volume: 1
+      sme_volume: 5
+      corporate_volume: 20
+      bytes_per_operation: 300
+      is_write: true
+      description: Risk model execution
+    Report Generation:
+      retail_volume: 0.1
+      sme_volume: 1
+      corporate_volume: 10
+      bytes_per_operation: 0
+      is_write: false
+      description: Analytics reports
+    Profitability Analysis:
+      retail_volume: 0
+      sme_volume: 1
+      corporate_volume: 5
+      bytes_per_operation: 500
+      is_write: true
+      description: Customer profitability
+  PULSAR:
+    Transaction Webhook:
+      retail_volume: 30
+      sme_volume: 150
+      corporate_volume: 1500
+      bytes_per_operation: 1506
+      is_write: true
+      description: Transaction notifications
+    Account Alert Webhook:
+      retail_volume: 10
+      sme_volume: 50
+      corporate_volume: 200
+      bytes_per_operation: 800
+      is_write: true
+      description: Account event alerts
+    Status Update Webhook:
+      retail_volume: 5
+      sme_volume: 20
+      corporate_volume: 100
+      bytes_per_operation: 600
+      is_write: true
+      description: Status change notifications
+    Webhook Subscription Create:
+      retail_volume: 0.05
+      sme_volume: 0.2
+      corporate_volume: 1
+      bytes_per_operation: 431
+      is_write: true
+      description: New webhook subscriptions
+    Webhook Retry:
+      retail_volume: 1
+      sme_volume: 5
+      corporate_volume: 50
+      bytes_per_operation: 500
+      is_write: true
+      description: Failed webhook retries
+    Batch Notification:
+      retail_volume: 0
+      sme_volume: 1
+      corporate_volume: 10
+      bytes_per_operation: 5000
+      is_write: true
+      description: Bulk notifications
+  HORIZON:
+    Customer View:
+      retail_volume: 2
+      sme_volume: 10
+      corporate_volume: 50
+      bytes_per_operation: 396
+      is_write: true
+      description: Customer profile views
+    Transaction Search:
+      retail_volume: 1
+      sme_volume: 5
+      corporate_volume: 20
+      bytes_per_operation: 396
+      is_write: true
+      description: Transaction queries
+    Report Access:
+      retail_volume: 0.1
+      sme_volume: 1
+      corporate_volume: 10
+      bytes_per_operation: 396
+      is_write: true
+      description: Report viewing
+    Bulk Operation:
+      retail_volume: 0.01
+      sme_volume: 0.1
+      corporate_volume: 1
+      bytes_per_operation: 1000
+      is_write: true
+      description: Batch operations
+    Export Activity:
+      retail_volume: 0.05
+      sme_volume: 0.5
+      corporate_volume: 5
+      bytes_per_operation: 396
+      is_write: true
+      description: Data exports
+    Dashboard View:
+      retail_volume: 5
+      sme_volume: 20
+      corporate_volume: 100
+      bytes_per_operation: 0
+      is_write: false
+      description: Dashboard access
+  POLARIS:
+    Config Read:
+      retail_volume: 100
+      sme_volume: 100
+      corporate_volume: 100
+      bytes_per_operation: 0
+      is_write: false
+      description: Configuration lookups
+    Config Update:
+      retail_volume: 0.001
+      sme_volume: 0.005
+      corporate_volume: 0.02
+      bytes_per_operation: 1067
+      is_write: true
+      description: Configuration changes
+    Feature Flag Toggle:
+      retail_volume: 0.0005
+      sme_volume: 0.002
+      corporate_volume: 0.01
+      bytes_per_operation: 200
+      is_write: true
+      description: Feature flag changes
+  DRACO:
+    Authentication:
+      retail_volume: 50
+      sme_volume: 100
+      corporate_volume: 200
+      bytes_per_operation: 0
+      is_write: false
+      description: User authentication
+    Authorization Check:
+      retail_volume: 200
+      sme_volume: 500
+      corporate_volume: 1000
+      bytes_per_operation: 0
+      is_write: false
+      description: Permission checks
+    Role Assignment:
+      retail_volume: 0.01
+      sme_volume: 0.05
+      corporate_volume: 0.2
+      bytes_per_operation: 128
+      is_write: true
+      description: Role changes
+    Permission Update:
+      retail_volume: 0.005
+      sme_volume: 0.02
+      corporate_volume: 0.1
+      bytes_per_operation: 128
+      is_write: true
+      description: Permission modifications
+    Audit Log Entry:
+      retail_volume: 10
+      sme_volume: 50
+      corporate_volume: 200
+      bytes_per_operation: 250
+      is_write: true
+      description: Security audit logs
