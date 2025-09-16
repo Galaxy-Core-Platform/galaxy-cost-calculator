@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galaxy Platform - Documentation Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding-top: 32px;
+            padding-bottom: 32px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 32px;
+        }
+        
+        .header h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .header h2 {
+            font-size: 24px;
+            font-weight: 400;
+            opacity: 0.9;
+        }
+        
+        /* Tiles Grid */
+        .tiles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+        
+        /* Dashboard Tile */
+        .dashboard-tile {
+            padding: 24px;
+            height: 320px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(145deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+        }
+        
+        .dashboard-tile:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+        }
+        
+        .dashboard-tile:hover .tile-icon {
+            transform: scale(1.1);
+        }
+        
+        /* Tile Header */
+        .tile-header {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        
+        .tile-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            transition: transform 0.3s ease;
+        }
+        
+        .tile-content {
+            margin-left: 16px;
+            flex: 1;
+        }
+        
+        .tile-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .tile-subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .tile-more {
+            width: 24px;
+            height: 24px;
+            opacity: 0.7;
+            cursor: pointer;
+        }
+        
+        /* Stats */
+        .tile-stats {
+            margin-bottom: 16px;
+        }
+        
+        .stats-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            gap: 4px;
+        }
+        
+        .chip-info {
+            background-color: rgba(33, 150, 243, 0.2);
+            color: #2196F3;
+        }
+        
+        /* Preview */
+        .tile-preview {
+            margin-top: auto;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .preview-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+        
+        .preview-label {
+            opacity: 0.8;
+        }
+        
+        .preview-value {
+            font-weight: 600;
+        }
+        
+        .preview-chips {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        
+        .mini-chip {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            background-color: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+        
+        /* Background decoration */
+        .tile-decoration {
+            position: absolute;
+            bottom: -20px;
+            right: -20px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            opacity: 0.1;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            color: white;
+            opacity: 0.7;
+            margin-top: 48px;
+        }
+        
+        .footer p {
+            font-size: 14px;
+        }
+        
+        /* Icon colors */
+        .icon-blue { background-color: #2196F3; }
+        .icon-green { background-color: #4CAF50; }
+        .icon-orange { background-color: #FF9800; }
+        .icon-cyan { background-color: #00BCD4; }
+        .icon-purple { background-color: #9C27B0; }
+        .icon-red { background-color: #FF5722; }
+        .icon-indigo { background-color: #1e88e5; }
+        .icon-teal { background-color: #009688; }
+        .icon-amber { background-color: #FFC107; }
+        .icon-pink { background-color: #E91E63; }
+        .icon-lime { background-color: #CDDC39; }
+        .icon-brown { background-color: #795548; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Galaxy Platform</h1>
+            <h2>Documentation Portal</h2>
+        </div>
+        
+        <!-- Tiles Grid -->
+        <div class="tiles-grid">
+            <!-- Orion Documentation -->
+            <a href="services/orion.html" class="dashboard-tile">
+                <div class="tile-header">
+                    <div class="tile-icon icon-purple">👥</div>
+                    <div class="tile-content">
+                        <div class="tile-title">Orion</div>
+                        <div class="tile-subtitle">Customer Management System</div>
+                    </div>
+                    <span class="tile-more">⋯</span>
+                </div>
+                <div class="tile-stats">
+                    <div class="stats-chips">
+                        <span class="chip chip-info">API Docs</span>
+                        <span class="chip chip-info">Guides</span>
+                    </div>
+                </div>
+                <div class="tile-preview">
+                    <div class="preview-row">
+                        <span class="preview-label">Technology</span>
+                        <span class="preview-value">Rust / Actix-web</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Port</span>
+                        <span class="preview-value">5020</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Documentation</span>
+                        <span class="preview-value">Complete</span>
+                    </div>
+                </div>
+                <div class="tile-decoration icon-purple"></div>
+            </a>
+            
+            <!-- Proxima Documentation -->
+            <a href="services/proxima.html" class="dashboard-tile">
+                <div class="tile-header">
+                    <div class="tile-icon icon-cyan">🏦</div>
+                    <div class="tile-content">
+                        <div class="tile-title">Proxima</div>
+                        <div class="tile-subtitle">Core Banking System</div>
+                    </div>
+                    <span class="tile-more">⋯</span>
+                </div>
+                <div class="tile-stats">
+                    <div class="stats-chips">
+                        <span class="chip chip-info">README</span>
+                        <span class="chip chip-info">Setup Guide</span>
+                    </div>
+                </div>
+                <div class="tile-preview">
+                    <div class="preview-row">
+                        <span class="preview-label">Technology</span>
+                        <span class="preview-value">Rust / Actix-web</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Port</span>
+                        <span class="preview-value">5010</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Documentation</span>
+                        <span class="preview-value">Available</span>
+                    </div>
+                </div>
+                <div class="tile-decoration icon-cyan"></div>
+            </a>
+            
+            <!-- Titan Documentation -->
+            <a href="services/titan.html" class="dashboard-tile">
+                <div class="tile-header">
+                    <div class="tile-icon icon-orange">🏭</div>
+                    <div class="tile-content">
+                        <div class="tile-title">Titan</div>
+                        <div class="tile-subtitle">Products Factory</div>
+                    </div>
+                    <span class="tile-more">⋯</span>
+                </div>
+                <div class="tile-stats">
+                    <div class="stats-chips">
+                        <span class="chip chip-info">API Docs</span>
+                        <span class="chip chip-info">Config Guide</span>
+                    </div>
+                </div>
+                <div class="tile-preview">
+                    <div class="preview-row">
+                        <span class="preview-label">Technology</span>
+                        <span class="preview-value">Rust</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Port</span>
+                        <span class="preview-value">5030</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Documentation</span>
+                        <span class="preview-value">API Available</span>
+                    </div>
+                </div>
+                <div class="tile-decoration icon-orange"></div>
+            </a>
+            
+            <!-- Stellar Documentation -->
+            <a href="services/stellar.html" class="dashboard-tile">
+                <div class="tile-header">
+                    <div class="tile-icon icon-blue">📁</div>
+                    <div class="tile-content">
+                        <div class="tile-title">Stellar</div>
+                        <div class="tile-subtitle">File Management Service</div>
+                    </div>
+                    <span class="tile-more">⋯</span>
+                </div>
+                <div class="tile-stats">
+                    <div class="stats-chips">
+                        <span class="chip chip-info">README</span>
+                        <span class="chip chip-info">Docker Guide</span>
+                    </div>
+                </div>
+                <div class="tile-preview">
+                    <div class="preview-row">
+                        <span class="preview-label">Technology</span>
+                        <span class="preview-value">Python / FastAPI</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Port</span>
+                        <span class="preview-value">5050</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Documentation</span>
+                        <span class="preview-value">Complete</span>
+                    </div>
+                </div>
+                <div class="tile-decoration icon-blue"></div>
+            </a>
+            
+            <!-- Nebula Documentation -->
+            <a href="services/nebula.html" class="dashboard-tile">
+                <div class="tile-header">
+                    <div class="tile-icon icon-indigo">☁️</div>
+                    <div class="tile-content">
+                        <div class="tile-title">Nebula</div>
+                        <div class="tile-subtitle">Customer Interaction Logging</div>
+                    </div>
+                    <span class="tile-more">⋯</span>
+                </div>
+                <div class="tile-stats">
+                    <div class="stats-chips">
+                        <span class="chip chip-info">API Docs</span>
+                        <span class="chip chip-info">Analytics Guide</span>
+                    </div>
+                </div>
+                <div class="tile-preview">
+                    <div class="preview-row">
+                        <span class="preview-label">Technology</span>
+                        <span class="preview-value">Rust</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Documentation</span>
+                        <span class="preview-value">API Available</span>
+                    </div>
+                </div>
+                <div class="tile-decoration icon-indigo"></div>
+            </a>
+            
+            <!-- Quasar Documentation -->
+            <a href="services/quasar.html" class="dashboard-tile">
+                <div class="tile-header">
+                    <div class="tile-icon icon-green">✅</div>
+                    <div class="tile-content">
+                        <div class="tile-title">Quasar</div>
+                        <div class="tile-subtitle">Verification Service</div>
+                    </div>
+                    <span class="tile-more">⋯</span>
+                </div>
+                <div class="tile-stats">
+                    <div class="stats-chips">
+                        <span class="chip chip-info">API Docs</span>
+                        <span class="chip chip-info">2FA Guide</span>
+                    </div>
+                </div>
+                <div class="tile-preview">
+                    <div class="preview-row">
+                        <span class="preview-label">Technology</span>
+                        <span class="preview-value">Rust</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Documentation</span>
+                        <span class="preview-value">API Available</span>
+                    </div>
+                </div>
+                <div class="tile-decoration icon-green"></div>
+            </a>
+            
+            <!-- Polaris Documentation -->
+            <a href="services/polaris.html" class="dashboard-tile">
+                <div class="tile-header">
+                    <div class="tile-icon icon-teal">⚙️</div>
+                    <div class="tile-content">
+                        <div class="tile-title">Polaris</div>
+                        <div class="tile-subtitle">Configuration & Enum Management</div>
+                    </div>
+                    <span class="tile-more">⋯</span>
+                </div>
+                <div class="tile-stats">
+                    <div class="stats-chips">
+                        <span class="chip chip-info">API Docs</span>
+                        <span class="chip chip-info">Config Guide</span>
+                    </div>
+                </div>
+                <div class="tile-preview">
+                    <div class="preview-row">
+                        <span class="preview-label">Technology</span>
+                        <span class="preview-value">Rust</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Documentation</span>
+                        <span class="preview-value">API Available</span>
+                    </div>
+                </div>
+                <div class="tile-decoration icon-teal"></div>
+            </a>
+            
+            <!-- Aphelion Documentation -->
+            <a href="services/aphelion.html" class="dashboard-tile">
+                <div class="tile-header">
+                    <div class="tile-icon icon-amber">🔧</div>
+                    <div class="tile-content">
+                        <div class="tile-title">Aphelion</div>
+                        <div class="tile-subtitle">Configuration Service</div>
+                    </div>
+                    <span class="tile-more">⋯</span>
+                </div>
+                <div class="tile-stats">
+                    <div class="stats-chips">
+                        <span class="chip chip-info">API Docs</span>
+                        <span class="chip chip-info">Setup Guide</span>
+                    </div>
+                </div>
+                <div class="tile-preview">
+                    <div class="preview-row">
+                        <span class="preview-label">Technology</span>
+                        <span class="preview-value">Rust</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Documentation</span>
+                        <span class="preview-value">API Available</span>
+                    </div>
+                </div>
+                <div class="tile-decoration icon-amber"></div>
+            </a>
+            
+            <!-- Krypton Documentation -->
+            <a href="services/krypton.html" class="dashboard-tile">
+                <div class="tile-header">
+                    <div class="tile-icon icon-pink">💎</div>
+                    <div class="tile-content">
+                        <div class="tile-title">Krypton</div>
+                        <div class="tile-subtitle">Collateral Module</div>
+                    </div>
+                    <span class="tile-more">⋯</span>
+                </div>
+                <div class="tile-stats">
+                    <div class="stats-chips">
+                        <span class="chip chip-info">API Docs</span>
+                        <span class="chip chip-info">Valuation Guide</span>
+                    </div>
+                </div>
+                <div class="tile-preview">
+                    <div class="preview-row">
+                        <span class="preview-label">Technology</span>
+                        <span class="preview-value">Makefile</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Documentation</span>
+                        <span class="preview-value">API Available</span>
+                    </div>
+                </div>
+                <div class="tile-decoration icon-pink"></div>
+            </a>
+            
+            <!-- Aster Documentation -->
+            <a href="services/aster.html" class="dashboard-tile">
+                <div class="tile-header">
+                    <div class="tile-icon icon-red">🔐</div>
+                    <div class="tile-content">
+                        <div class="tile-title">Aster</div>
+                        <div class="tile-subtitle">Approval Engine</div>
+                    </div>
+                    <span class="tile-more">⋯</span>
+                </div>
+                <div class="tile-stats">
+                    <div class="stats-chips">
+                        <span class="chip chip-info">API Docs</span>
+                        <span class="chip chip-info">Workflow Guide</span>
+                    </div>
+                </div>
+                <div class="tile-preview">
+                    <div class="preview-row">
+                        <span class="preview-label">Technology</span>
+                        <span class="preview-value">Makefile</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Documentation</span>
+                        <span class="preview-value">API Available</span>
+                    </div>
+                </div>
+                <div class="tile-decoration icon-red"></div>
+            </a>
+            
+            <!-- Draco Documentation -->
+            <a href="services/draco.html" class="dashboard-tile">
+                <div class="tile-header">
+                    <div class="tile-icon icon-brown">🛡️</div>
+                    <div class="tile-content">
+                        <div class="tile-title">Draco</div>
+                        <div class="tile-subtitle">RBAC Backend System</div>
+                    </div>
+                    <span class="tile-more">⋯</span>
+                </div>
+                <div class="tile-stats">
+                    <div class="stats-chips">
+                        <span class="chip chip-info">Setup Guide</span>
+                        <span class="chip chip-info">Permissions</span>
+                    </div>
+                </div>
+                <div class="tile-preview">
+                    <div class="preview-row">
+                        <span class="preview-label">Technology</span>
+                        <span class="preview-value">Rust</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Documentation</span>
+                        <span class="preview-value">Available</span>
+                    </div>
+                </div>
+                <div class="tile-decoration icon-brown"></div>
+            </a>
+            
+            <!-- Horizon Documentation -->
+            <a href="services/horizon.html" class="dashboard-tile">
+                <div class="tile-header">
+                    <div class="tile-icon icon-lime">🖥️</div>
+                    <div class="tile-content">
+                        <div class="tile-title">Horizon</div>
+                        <div class="tile-subtitle">Backoffice UI</div>
+                    </div>
+                    <span class="tile-more">⋯</span>
+                </div>
+                <div class="tile-stats">
+                    <div class="stats-chips">
+                        <span class="chip chip-info">UI Guide</span>
+                        <span class="chip chip-info">Components</span>
+                    </div>
+                </div>
+                <div class="tile-preview">
+                    <div class="preview-row">
+                        <span class="preview-label">Technology</span>
+                        <span class="preview-value">React</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Port</span>
+                        <span class="preview-value">5137</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Documentation</span>
+                        <span class="preview-value">Available</span>
+                    </div>
+                </div>
+                <div class="tile-decoration icon-lime"></div>
+            </a>
+            
+            <!-- Luna Documentation -->
+            <a href="services/luna.html" class="dashboard-tile">
+                <div class="tile-header">
+                    <div class="tile-icon icon-purple">🤖</div>
+                    <div class="tile-content">
+                        <div class="tile-title">Luna</div>
+                        <div class="tile-subtitle">GenAI Assistant Backend</div>
+                    </div>
+                    <span class="tile-more">⋯</span>
+                </div>
+                <div class="tile-stats">
+                    <div class="stats-chips">
+                        <span class="chip chip-info">AI Guide</span>
+                        <span class="chip chip-info">Integration</span>
+                    </div>
+                </div>
+                <div class="tile-preview">
+                    <div class="preview-row">
+                        <span class="preview-label">Technology</span>
+                        <span class="preview-value">Python</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Port</span>
+                        <span class="preview-value">5040</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Documentation</span>
+                        <span class="preview-value">Available</span>
+                    </div>
+                </div>
+                <div class="tile-decoration icon-purple"></div>
+            </a>
+            
+            <!-- Pulsar Documentation -->
+            <a href="services/pulsar.html" class="dashboard-tile">
+                <div class="tile-header">
+                    <div class="tile-icon icon-orange">📡</div>
+                    <div class="tile-content">
+                        <div class="tile-title">Pulsar</div>
+                        <div class="tile-subtitle">Webhook Module</div>
+                    </div>
+                    <span class="tile-more">⋯</span>
+                </div>
+                <div class="tile-stats">
+                    <div class="stats-chips">
+                        <span class="chip chip-info">Webhook Guide</span>
+                        <span class="chip chip-info">Events</span>
+                    </div>
+                </div>
+                <div class="tile-preview">
+                    <div class="preview-row">
+                        <span class="preview-label">Technology</span>
+                        <span class="preview-value">Rust</span>
+                    </div>
+                    <div class="preview-row">
+                        <span class="preview-label">Documentation</span>
+                        <span class="preview-value">Available</span>
+                    </div>
+                </div>
+                <div class="tile-decoration icon-orange"></div>
+            </a>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>Galaxy Platform Documentation Portal - All service documentation in one place</p>
+        </div>
+    </div>
+</body>
+</html>

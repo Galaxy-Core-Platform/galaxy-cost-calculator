@@ -12,6 +12,10 @@ import os
 from pathlib import Path
 from typing import Dict, List
 import traceback
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Import segment operations model
 from segment_operations_model import (
@@ -19,6 +23,35 @@ from segment_operations_model import (
     calculate_total_volumes,
     generate_volume_config
 )
+
+# Import technical information modules
+try:
+    from database_technical_info import (
+        get_all_databases,
+        get_database_summary,
+        get_service_status
+    )
+    from documentation_manager import (
+        get_documentation_summary,
+        run_lint,
+        build_docs
+    )
+    from processes_info import (
+        get_processes_summary,
+        get_batch_jobs
+    )
+    TECHNICAL_MODULES_AVAILABLE = True
+except ImportError:
+    TECHNICAL_MODULES_AVAILABLE = False
+
+# Import database inspector separately
+try:
+    from database_inspector import DatabaseInspector
+    DATABASE_INSPECTOR_AVAILABLE = True
+    print("Database Inspector loaded successfully")
+except ImportError as e:
+    DATABASE_INSPECTOR_AVAILABLE = False
+    print(f"Warning: Database Inspector not available: {e}")
 
 # Import original calculation functions
 from galaxy_cloud_calculator import (
@@ -58,6 +91,297 @@ def serve_static(path):
 def health():
     """Health check endpoint"""
     return jsonify({'status': 'healthy', 'service': 'Galaxy Cost Calculator API v2'})
+
+@app.route('/api/databases/all', methods=['GET'])
+def get_databases():
+    """Get all database information"""
+    try:
+        # Try to use real PostgreSQL data first
+        if not DATABASE_INSPECTOR_AVAILABLE:
+            raise Exception("Database Inspector not available")
+        
+        db_inspector = DatabaseInspector()
+        
+        # Get Galaxy databases stats
+        galaxy_stats = db_inspector.get_galaxy_databases_stats()
+        
+        # Get summary statistics
+        summary = db_inspector.get_summary_stats()
+        
+        # Transform to expected format
+        databases = []
+        for stat in galaxy_stats:
+            databases.append({
+                'name': stat['name'],
+                'service': stat['service'],
+                'status': stat['status'],
+                'total_tables': stat['total_tables'],
+                'total_rows': stat['total_rows'],
+                'total_size_pretty': stat.get('total_size_pretty', '0 B'),
+                'total_size': stat.get('total_size', 0),
+                'connections': stat.get('connections', 0),
+                'max_connections': summary['max_connections'],
+                'version': stat.get('version', 'Unknown'),
+                'indexes': stat.get('indexes', 0),
+                'largest_tables': stat.get('largest_tables', [])
+            })
+        
+        return jsonify({
+            'databases': databases,
+            'summary': {
+                'total_databases': summary['total_databases'],
+                'galaxy_databases': summary['galaxy_databases'],
+                'total_size': summary['total_size_pretty'],
+                'total_connections': f"{summary['total_connections']}/{summary['max_connections']}",
+                'total_tables': summary['total_tables'],
+                'total_records': summary['total_rows'],
+                'postgres_version': summary['postgres_version']
+            }
+        })
+    except Exception as e:
+        # Fallback to mock data if PostgreSQL is not available
+        logger.warning(f"Failed to get real database data: {e}")
+        if TECHNICAL_MODULES_AVAILABLE:
+            try:
+                databases = get_all_databases()
+                summary = get_database_summary()
+                return jsonify({
+                    'databases': databases,
+                    'summary': summary
+                })
+            except:
+                pass
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/databases/<database_name>', methods=['GET'])
+def get_database_details(database_name):
+    """Get detailed information for a specific database"""
+    try:
+        db_inspector = DatabaseInspector()
+        stats = db_inspector.get_database_stats(database_name)
+        
+        if not stats or not stats.get('name'):
+            return jsonify({'error': f'Database {database_name} not found'}), 404
+        
+        return jsonify(stats)
+    except Exception as e:
+        logger.error(f"Error getting database details: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/services/status', methods=['GET'])
+def get_services_status():
+    """Get service status information"""
+    try:
+        from services_info import get_services_summary
+        status = get_services_summary()
+        return jsonify(status)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/services/health/<service_name>', methods=['GET'])
+def check_service_health(service_name):
+    """Real-time health check for a specific service"""
+    import requests
+    import socket
+    import time
+    import json
+    import os
+    
+    # Load service port configuration from file
+    config_file = os.path.join(os.path.dirname(__file__), 'galaxy_services_ports.json')
+    try:
+        with open(config_file, 'r') as f:
+            port_config = json.load(f)
+    except:
+        # Fallback configuration if file not found
+        port_config = {
+            'services': {
+                'proxima': {'port': 8080, 'health_path': '/health'},
+                'titan': {'port': 5030, 'health_path': '/health'},
+                'orion': {'port': 5010, 'health_path': '/health'}
+            },
+            'display_name_mapping': {}
+        }
+    
+    # Map display name to service key
+    service_name_mapped = port_config.get('display_name_mapping', {}).get(service_name, service_name.lower())
+    
+    # Get service configuration
+    if service_name_mapped not in port_config['services']:
+        service_name_mapped = service_name.lower()
+    
+    if service_name_mapped not in port_config['services']:
+        return jsonify({'error': 'Unknown service', 'service': service_name}), 404
+    
+    service_config = port_config['services'][service_name_mapped]
+    service_endpoints = {
+        service_name_mapped: {
+            'host': 'localhost',
+            'port': service_config['port'],
+            'path': service_config.get('health_path', '/health')
+        }
+    }
+    
+    service_name_lower = service_name_mapped
+    
+    if service_name_lower not in service_endpoints:
+        return jsonify({'error': 'Unknown service', 'service': service_name}), 404
+    
+    service_config = service_endpoints[service_name_lower]
+    endpoint_url = f"http://{service_config['host']}:{service_config['port']}{service_config['path']}"
+    
+    # Prepare health status response
+    health_status = {
+        'service': service_name,
+        'endpoint': endpoint_url,
+        'timestamp': time.time(),
+        'status': 'unknown',
+        'response_time_ms': None,
+        'details': {}
+    }
+    
+    # Try to check if the service port is open
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(1)
+        result = sock.connect_ex((service_config['host'], service_config['port']))
+        sock.close()
+        
+        if result == 0:
+            # Port is open, try actual health check
+            try:
+                start_time = time.time()
+                response = requests.get(endpoint_url, timeout=2)
+                response_time = (time.time() - start_time) * 1000
+                
+                health_status['response_time_ms'] = round(response_time, 2)
+                
+                if response.status_code == 200:
+                    health_status['status'] = 'healthy'
+                    try:
+                        health_status['details'] = response.json()
+                    except:
+                        health_status['details'] = {'message': 'Service is running'}
+                else:
+                    health_status['status'] = 'unhealthy'
+                    health_status['details'] = {'status_code': response.status_code}
+            except requests.exceptions.Timeout:
+                health_status['status'] = 'timeout'
+                health_status['details'] = {'message': 'Health check timed out'}
+            except requests.exceptions.ConnectionError:
+                health_status['status'] = 'degraded'
+                health_status['details'] = {'message': 'Port open but health endpoint not responding'}
+        else:
+            # Port is not open
+            health_status['status'] = 'down'
+            health_status['details'] = {'message': f'Service port {service_config["port"]} is not accessible'}
+    except Exception as e:
+        health_status['status'] = 'error'
+        health_status['details'] = {'error': str(e)}
+    
+    # Don't override with fake data - show real status
+    
+    return jsonify(health_status)
+
+@app.route('/api/processes/all', methods=['GET'])
+def get_processes():
+    """Get all process information"""
+    if not TECHNICAL_MODULES_AVAILABLE:
+        return jsonify({'error': 'Technical modules not available'}), 503
+    try:
+        data = get_processes_summary()
+        # Restructure response to match frontend expectations
+        response = {
+            'processes': data.get('processes', []),
+            'summary': {
+                'total_processes': data.get('total_processes', 0),
+                'running_count': data.get('running_count', 0),
+                'idle_count': data.get('idle_count', 0),
+                'processing_count': data.get('processing_count', 0),
+                'avg_cpu_usage': data.get('total_cpu_usage', 0) / max(data.get('total_processes', 1), 1),
+                'total_memory_mb': data.get('total_memory_mb', 0),
+                'by_type': data.get('by_type', {})
+            }
+        }
+        return jsonify(response)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/processes/batch-jobs', methods=['GET'])
+def get_batch():
+    """Get batch job information"""
+    if not TECHNICAL_MODULES_AVAILABLE:
+        return jsonify({'error': 'Technical modules not available'}), 503
+    try:
+        jobs = get_batch_jobs()
+        return jsonify({'batch_jobs': jobs})  # Changed from 'jobs' to 'batch_jobs'
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/cobit/processes', methods=['GET'])
+def get_cobit_processes():
+    """Get COBIT framework processes"""
+    try:
+        from cobit_processes import get_processes_summary
+        summary = get_processes_summary()
+        return jsonify(summary)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/cobit/process/<process_id>/<action>', methods=['POST'])
+def execute_cobit_process(process_id, action):
+    """Execute action on COBIT process"""
+    try:
+        from cobit_processes import execute_process
+        result = execute_process(process_id, action)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/governance/document', methods=['GET'])
+def serve_governance_document():
+    """Serve governance framework documents"""
+    import mimetypes
+    from flask import send_file, request
+    
+    try:
+        filepath = request.args.get('path', '')
+        if not filepath:
+            return jsonify({'error': 'No file path provided'}), 400
+            
+        # For PlantUML files, try to serve PNG version
+        if filepath.endswith('.puml'):
+            # Try to find the corresponding PNG file
+            png_path = filepath.replace('.puml', '.png')
+            if os.path.exists(png_path):
+                filepath = png_path
+            else:
+                # Try without the full path, just the filename pattern
+                import glob
+                base_dir = os.path.dirname(filepath)
+                base_name = os.path.basename(filepath).replace('.puml', '')
+                png_files = glob.glob(f"{base_dir}/{base_name}*.png")
+                if png_files:
+                    filepath = png_files[0]
+                else:
+                    return jsonify({'error': 'PNG version not found'}), 404
+        
+        # Security check - ensure file exists and is readable
+        if not os.path.exists(filepath):
+            return jsonify({'error': f'File not found: {filepath}'}), 404
+            
+        # Get MIME type
+        mime_type = mimetypes.guess_type(filepath)[0] or 'application/octet-stream'
+        
+        # For images, ensure proper content type
+        if filepath.endswith('.png'):
+            mime_type = 'image/png'
+        elif filepath.endswith('.jpg') or filepath.endswith('.jpeg'):
+            mime_type = 'image/jpeg'
+        
+        return send_file(filepath, mimetype=mime_type, as_attachment=False)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/segments', methods=['GET'])
 def get_segments():
@@ -479,6 +803,154 @@ def get_services():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Documentation Portal endpoints
+@app.route('/api/documentation/open-portal', methods=['POST'])
+def open_documentation_portal():
+    """Open the local documentation portal in the default browser"""
+    try:
+        import subprocess
+        import platform
+        import os
+        
+        portal_path = '/Users/mifo/Desktop/Galaxy/1-GalaxyPlatform-Docs/docs-portal/build/portal-index.html'
+        
+        # Check if file exists
+        if not os.path.exists(portal_path):
+            return jsonify({'error': 'Documentation portal file not found'}), 404
+        
+        # Open the file based on the platform
+        if platform.system() == 'Darwin':  # macOS
+            subprocess.call(['open', portal_path])
+        elif platform.system() == 'Windows':
+            subprocess.call(['start', portal_path], shell=True)
+        else:  # Linux
+            subprocess.call(['xdg-open', portal_path])
+        
+        return jsonify({'message': 'Documentation portal opened successfully'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/documentation/status', methods=['GET'])
+def get_documentation_status():
+    """Get documentation portal status"""
+    try:
+        summary = get_documentation_summary()
+        return jsonify(summary)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/documentation/lint', methods=['POST'])
+def run_documentation_lint():
+    """Run lint on documentation"""
+    try:
+        result = run_lint()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e), 'success': False}), 500
+
+@app.route('/api/documentation/build', methods=['POST'])
+def build_documentation():
+    """Build documentation"""
+    try:
+        result = build_docs()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e), 'success': False}), 500
+
+@app.route('/api/documentation/spec/<service_name>', methods=['GET'])
+def get_documentation_spec(service_name):
+    """Serve OpenAPI specification for a service"""
+    from flask import send_file
+    import os
+    
+    # Map service names to their OpenAPI spec files
+    galaxy_base = '/Users/mifo/Desktop/Galaxy'
+    
+    # Try multiple possible locations
+    possible_paths = [
+        os.path.join(galaxy_base, service_name, 'build', 'openapi-bundle.yaml'),
+        os.path.join(galaxy_base, service_name, 'openapi.yaml'),
+        os.path.join(galaxy_base, service_name, 'openapi.yml'),
+    ]
+    
+    for spec_path in possible_paths:
+        if os.path.exists(spec_path):
+            # Add CORS headers for Swagger UI
+            response = send_file(spec_path, mimetype='text/yaml')
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            return response
+    
+    return jsonify({"error": f"OpenAPI spec not found for {service_name}"}), 404
+
+@app.route('/api/documentation/business', methods=['GET'])
+def get_business_docs():
+    """Get business documentation structure"""
+    try:
+        docs_base = '/Users/mifo/Desktop/Galaxy/1-GalaxyPlatform-Docs'
+        business_docs = []
+        
+        # Check for different types of business documentation
+        doc_types = {
+            'governance': os.path.join(docs_base, 'governance-framework'),
+            'architecture': os.path.join(docs_base, 'architecture'),
+            'user_guides': os.path.join(docs_base, 'user-guides'),
+            'processes': os.path.join(docs_base, 'processes'),
+        }
+        
+        for doc_type, path in doc_types.items():
+            if os.path.exists(path):
+                # Count files and get basic info
+                files = []
+                for root, dirs, filenames in os.walk(path):
+                    for filename in filenames:
+                        if filename.endswith(('.md', '.pdf', '.png', '.jpg')):
+                            files.append(filename)
+                
+                business_docs.append({
+                    'type': doc_type.replace('_', ' ').title(),
+                    'path': path,
+                    'file_count': len(files),
+                    'available': True
+                })
+        
+        # Add governance framework (we know this exists)
+        if os.path.exists(os.path.join(docs_base, 'governance-framework')):
+            business_docs.append({
+                'type': 'Governance Framework',
+                'description': 'COBIT-based governance processes and controls',
+                'path': os.path.join(docs_base, 'governance-framework'),
+                'available': True,
+                'categories': [
+                    'Process Definitions',
+                    'Control Objectives',
+                    'Risk Management',
+                    'Compliance Guidelines'
+                ]
+            })
+        
+        return jsonify({
+            'success': True,
+            'documents': business_docs,
+            'total_categories': len(business_docs)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e), 'success': False}), 500
+
+@app.route('/api/documentation/view/<service_name>', methods=['GET'])
+def view_documentation(service_name):
+    """Redirect to the actual Redoc documentation portal"""
+    from flask import redirect
+    # Redirect to your existing Redoc portal on port 4000
+    # The Redocly server serves individual API docs at /apis/{service}
+    return redirect(f'http://127.0.0.1:4000/apis/{service_name.lower()}')
+
+@app.route('/api/documentation/redocly', methods=['GET'])
+def open_redocly():
+    """Redirect to local Redocly documentation portal"""
+    from flask import redirect
+    # Redirect to your local Redocly preview server on port 4000
+    return redirect('http://127.0.0.1:4000')
+
 if __name__ == '__main__':
     print("Starting Galaxy Cost Calculator API v2...")
     print("API available at: http://localhost:5000")
@@ -494,6 +966,9 @@ if __name__ == '__main__':
     print("  POST /api/config/pricing/<provider> - Update pricing config")
     print("  GET  /api/services - List Galaxy services")
     print("  GET  /api/health - Health check")
+    print("  GET  /api/documentation/status - Documentation portal status")
+    print("  POST /api/documentation/lint - Run documentation lint")
+    print("  POST /api/documentation/build - Build documentation")
     
     # Check if running in production mode
     is_production = os.environ.get('FLASK_ENV') == 'production'

@@ -25,8 +25,7 @@ fi
 
 # Start API server v2
 echo "Starting API server v2 on port 5001..."
-cd /Users/mifo/Desktop/galaxy-cost-calculator
-source venv/bin/activate
+source venv/bin/activate 2>/dev/null || true
 python3 api_server_v2.py &
 API_PID=$!
 sleep 2

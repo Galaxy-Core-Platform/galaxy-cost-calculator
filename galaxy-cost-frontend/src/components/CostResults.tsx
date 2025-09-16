@@ -48,13 +48,13 @@ const CostResults: React.FC<Props> = ({ estimate, loading }) => {
   }
 
   return (
-    <>
+    <Box>
       {/* Cost Summary */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Grid container spacing={3}>
+      <Box sx={{ mb: 3 }}>
+        <Grid container spacing={2}>
           <Grid size={12}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-              <Typography variant="h4">Cost Estimate</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+              <Typography variant="h5">Cost Estimate</Typography>
               <Chip 
                 label={estimate.provider.toUpperCase()} 
                 color="primary" 
@@ -68,59 +68,59 @@ const CostResults: React.FC<Props> = ({ estimate, loading }) => {
             </Box>
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 4 }}>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="subtitle2" color="text.secondary">
+          <Grid size={4}>
+            <Box>
+              <Typography variant="caption" color="text.secondary" display="block">
                 Monthly Cost
               </Typography>
-              <Typography variant="h3" color="primary.main">
+              <Typography variant="h5" color="primary.main" sx={{ fontWeight: 600 }}>
                 {formatCurrency(estimate.monthlyCost)}
               </Typography>
             </Box>
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 4 }}>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="subtitle2" color="text.secondary">
+          <Grid size={4}>
+            <Box>
+              <Typography variant="caption" color="text.secondary" display="block">
                 Annual Cost
               </Typography>
-              <Typography variant="h3">
+              <Typography variant="h5" sx={{ fontWeight: 600 }}>
                 {formatCurrency(estimate.annualCost)}
               </Typography>
             </Box>
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 4 }}>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="subtitle2" color="text.secondary">
+          <Grid size={4}>
+            <Box>
+              <Typography variant="caption" color="text.secondary" display="block">
                 Per Customer/Month
               </Typography>
-              <Typography variant="h3" color="secondary.main">
+              <Typography variant="h5" color="secondary.main" sx={{ fontWeight: 600 }}>
                 ${estimate.costPerCustomer.toFixed(2)}
               </Typography>
             </Box>
           </Grid>
         </Grid>
-      </Paper>
+      </Box>
 
       {/* Breakdown Chart */}
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h5" gutterBottom>
+      <Box>
+        <Typography variant="h6" sx={{ mb: 2 }}>
           Cost Breakdown
         </Typography>
         
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ResponsiveContainer width="100%" height={300}>
+        <Grid container spacing={2}>
+          <Grid size={6}>
+            <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
                   data={pieData}
                   cx="50%"
                   cy="50%"
-                  outerRadius={100}
+                  outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                  label={false}
                 >
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -131,8 +131,8 @@ const CostResults: React.FC<Props> = ({ estimate, loading }) => {
             </ResponsiveContainer>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Box sx={{ mt: 2 }}>
+          <Grid size={6}>
+            <Box>
               {pieData.slice(0, 8).map((item, index) => (
                 <Box 
                   key={item.name}
@@ -140,10 +140,12 @@ const CostResults: React.FC<Props> = ({ estimate, loading }) => {
                     display: 'flex', 
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    mb: 1.5,
-                    p: 1,
-                    borderRadius: 1,
-                    backgroundColor: 'grey.50'
+                    mb: 1,
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 0.5,
+                    backgroundColor: 'grey.50',
+                    fontSize: '0.875rem'
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -155,11 +157,11 @@ const CostResults: React.FC<Props> = ({ estimate, loading }) => {
                         borderRadius: 0.5
                       }} 
                     />
-                    <Typography variant="body2">
+                    <Typography variant="caption">
                       {item.name}
                     </Typography>
                   </Box>
-                  <Typography variant="body2" fontWeight="bold">
+                  <Typography variant="caption" fontWeight="600">
                     {formatCurrency(item.value)}
                   </Typography>
                 </Box>
@@ -167,8 +169,8 @@ const CostResults: React.FC<Props> = ({ estimate, loading }) => {
             </Box>
           </Grid>
         </Grid>
-      </Paper>
-    </>
+      </Box>
+    </Box>
   );
 };
 

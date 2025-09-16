@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(kill:*)",
+      "Bash(npm install)",
+      "Bash(node server.js)",
+      "Bash(npm start)",
+      "Bash(lsof:*)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Read(//Users/mifo/Desktop/Galaxy/spark/**)",
+      "Read(//Users/mifo/Desktop/galaxy-governance/sdlc-agent/**)",
+      "Bash(grep:*)",
+      "Read(//Users/mifo/Desktop/**)",
+      "Bash(venv/bin/pip install:*)",
+      "Bash(export PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1)",
+      "Bash(temporal:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

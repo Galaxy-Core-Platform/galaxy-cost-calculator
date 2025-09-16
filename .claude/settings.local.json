@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(/Users/mifo/Desktop/Galaxy/aphelion/build/**)",
+      "Bash(./run_app_v2.sh)",
+      "Bash(lsof:*)",
+      "Bash(kill:*)",
+      "Bash(open http://localhost:3000)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_click",
+      "Bash(open http://localhost:3000/bill-of-materials)",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_navigate_back",
+      "Bash(open http://localhost:3000/service-bom/horizon)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

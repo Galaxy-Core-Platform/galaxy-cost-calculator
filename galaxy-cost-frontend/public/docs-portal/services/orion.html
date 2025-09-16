@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orion - Customer Management Service | Galaxy Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .platform-header {
+            text-align: center;
+            color: white;
+            padding: 40px 20px 20px;
+        }
+        
+        .platform-title {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .platform-subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .service-header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .service-title-section {
+            margin-bottom: 25px;
+        }
+        
+        .back-link {
+            display: inline-block;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.95em;
+            margin-bottom: 15px;
+            transition: opacity 0.3s ease;
+        }
+        
+        .back-link:hover {
+            opacity: 0.7;
+        }
+        
+        .service-title {
+            font-size: 2.5em;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .service-subtitle {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 25px;
+        }
+        
+        .service-badges {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .badge {
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+        
+        .badge.tech {
+            background: #667eea;
+            color: white;
+        }
+        
+        .badge.port {
+            background: #764ba2;
+            color: white;
+        }
+        
+        .badge.status {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .content-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .content-card.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .card-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .feature-list {
+            list-style: none;
+        }
+        
+        .feature-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .feature-list li:before {
+            content: "✓";
+            color: #4caf50;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .api-endpoints {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .endpoint {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .endpoint-method {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .method-get { background: #61affe; color: white; }
+        .method-post { background: #49cc90; color: white; }
+        .method-put { background: #fca130; color: white; }
+        .method-delete { background: #f93e3e; color: white; }
+        
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            color: #333;
+        }
+        
+        .endpoint-description {
+            color: #666;
+            margin-top: 8px;
+            font-size: 0.9em;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .tech-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .tech-name {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .tech-version {
+            color: #999;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <!-- Platform Header -->
+    <div class="platform-header">
+        <h1 class="platform-title">Galaxy Platform</h1>
+        <p class="platform-subtitle">Documentation Portal</p>
+    </div>
+    
+    <div class="container">
+        <div class="service-header">
+            <div class="service-title-section">
+                <a href="../portal-index.html" class="back-link">← Back to Portal</a>
+                <h1 class="service-title">Orion</h1>
+                <p class="service-subtitle">Customer Management Service</p>
+            </div>
+            <div class="service-badges">
+                <span class="badge tech">Rust</span>
+                <span class="badge tech">Actix-web</span>
+                <span class="badge port">Port: 5020</span>
+                <span class="badge status">Production Ready</span>
+            </div>
+        </div>
+        
+        <div class="content-grid">
+            <div class="content-card">
+                <h2 class="card-title">🎯 Overview</h2>
+                <p style="color: #666; line-height: 1.8;">
+                    Orion is the central customer management service for the Galaxy Platform, providing 
+                    comprehensive customer lifecycle management for retail, SME, and corporate customers. 
+                    Built with Rust and Actix-web, it offers high-performance, type-safe customer operations 
+                    with built-in deduplication, preference management, and audit capabilities.
+                </p>
+                <div class="button-group">
+                    <a href="../api-docs/orion.html" class="btn btn-primary">View API Docs</a>
+                    <a href="https://github.com/Galaxy-Core-Platform/galaxy-orion" class="btn btn-secondary">View Source</a>
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h2 class="card-title">✨ Key Features</h2>
+                <ul class="feature-list">
+                    <li>Multi-segment Support (Retail, SME, Corporate)</li>
+                    <li>Intelligent Deduplication Engine</li>
+                    <li>Preference Management System</li>
+                    <li>Complete Audit Trail</li>
+                    <li>GDPR Compliance Built-in</li>
+                    <li>Real-time Event Streaming</li>
+                    <li>KYC/AML Integration Ready</li>
+                </ul>
+            </div>
+            
+            <div class="content-card full-width">
+                <h2 class="card-title">🔌 API Endpoints</h2>
+                <div class="api-endpoints">
+                    <div class="endpoint">
+                        <span class="endpoint-method method-post">POST</span>
+                        <span class="endpoint-path">/api/v1/customers</span>
+                        <p class="endpoint-description">Create a new customer with automatic deduplication checking</p>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <span class="endpoint-path">/api/v1/customers/{customer_id}</span>
+                        <p class="endpoint-description">Retrieve detailed customer information</p>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method method-put">PUT</span>
+                        <span class="endpoint-path">/api/v1/customers/{customer_id}</span>
+                        <p class="endpoint-description">Update customer information with audit logging</p>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <span class="endpoint-path">/api/v1/customers/search</span>
+                        <p class="endpoint-description">Advanced customer search with multiple filters</p>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <span class="endpoint-path">/api/v1/customers/{customer_id}/preferences</span>
+                        <p class="endpoint-description">Get customer preferences and settings</p>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <span class="endpoint-path">/api/v1/customers/{customer_id}/audit</span>
+                        <p class="endpoint-description">Get complete audit history for a customer</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h2 class="card-title">⚡ Performance</h2>
+                <ul class="feature-list">
+                    <li>Response Time: < 100ms (P95)</li>
+                    <li>Throughput: 10,000+ req/sec</li>
+                    <li>Availability: 99.99% SLA</li>
+                    <li>Horizontal Scaling Support</li>
+                    <li>Connection Pooling</li>
+                    <li>Redis Caching Layer</li>
+                </ul>
+            </div>
+            
+            <div class="content-card">
+                <h2 class="card-title">🛠️ Technology Stack</h2>
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <div class="tech-name">Rust</div>
+                        <div class="tech-version">1.75+</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">Actix-web</div>
+                        <div class="tech-version">4.0</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">PostgreSQL</div>
+                        <div class="tech-version">14+</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">Redis</div>
+                        <div class="tech-version">7.0</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">Apache Pulsar</div>
+                        <div class="tech-version">2.11</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">Docker</div>
+                        <div class="tech-version">Latest</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-card full-width">
+                <h2 class="card-title">💻 Quick Start</h2>
+                <div class="code-block">
+# Clone the repository
+git clone https://github.com/Galaxy-Core-Platform/orion.git
+cd orion
+
+# Set up environment variables
+export DATABASE_URL="postgresql://user:pass@localhost/orion"
+export REDIS_URL="redis://localhost:6379"
+
+# Build and run
+cargo build --release
+cargo run
+
+# Or use Docker
+docker build -t orion:latest .
+docker run -p 5020:5020 orion:latest
+
+# Health check
+curl http://localhost:5020/health</div>
+            </div>
+            
+            <div class="content-card full-width">
+                <h2 class="card-title">📚 Integration</h2>
+                <p style="color: #666; line-height: 1.8; margin-bottom: 20px;">
+                    Orion integrates seamlessly with other Galaxy Platform services:
+                </p>
+                <ul class="feature-list">
+                    <li><strong>Draco (RBAC):</strong> Authorization and access control for all operations</li>
+                    <li><strong>Pulsar:</strong> Event streaming for real-time customer updates</li>
+                    <li><strong>Stellar:</strong> Document management for KYC documents</li>
+                    <li><strong>Proxima:</strong> Account creation and management</li>
+                    <li><strong>Nebula:</strong> Customer interaction logging</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

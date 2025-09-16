@@ -22,20 +22,34 @@ const CloudComparison: React.FC<Props> = ({ estimate }) => {
   const [comparison, setComparison] = useState<any[]>([]);
 
   useEffect(() => {
-    // Simulate fetching comparison data
+    if (!estimate) {
+      return;
+    }
+    
+    console.log('CloudComparison received estimate:', estimate);
+    
+    // Get customer count - handle both typed field and potential API response fields
+    const customerCount = estimate.customerCount || 
+                         (estimate as any).customer_count || 
+                         (estimate as any).total_customers || 
+                         1110000;
+    
+    // Get monthly cost - handle both typed field and potential API response fields
+    const currentCost = estimate.monthlyCost || 
+                       (estimate as any).monthly_cost || 
+                       116700; // Default fallback
+    
+    // Create comparison with relative pricing
     const baseCosts = {
-      AWS: 68100,
-      GCP: 41660,
-      Azure: 97690,
+      AWS: currentCost * 1.63,  // AWS typically more expensive
+      GCP: currentCost * 1.0,   // Use current as GCP baseline
+      Azure: currentCost * 2.34, // Azure typically most expensive
     };
 
-    const scaleFactor = estimate.customerCount / 100000;
-    const archMultiplier = estimate.architecture === 'multi_region_3az' ? 2.5 : 1;
-
-    const data = Object.entries(baseCosts).map(([provider, base]) => ({
+    const data = Object.entries(baseCosts).map(([provider, monthlyCost]) => ({
       provider,
-      monthlyCost: base * scaleFactor * archMultiplier * 1.4, // Including non-prod
-      costPerCustomer: (base * scaleFactor * archMultiplier * 1.4) / estimate.customerCount,
+      monthlyCost: monthlyCost,
+      costPerCustomer: monthlyCost / customerCount,
     }));
 
     setComparison(data);
@@ -52,14 +66,24 @@ const CloudComparison: React.FC<Props> = ({ estimate }) => {
     comparison[0] || {}
   );
 
+  if (!comparison.length) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 4 }}>
+        <Typography color="text.secondary">
+          Loading cloud comparison data...
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
-    <Paper sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>
+    <Box>
+      <Typography variant="h6" sx={{ mb: 2 }}>
         Multi-Cloud Comparison
       </Typography>
 
       {/* Bar Chart */}
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={250}>
         <BarChart data={comparison}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="provider" />
@@ -129,21 +153,20 @@ const CloudComparison: React.FC<Props> = ({ estimate }) => {
       </TableContainer>
 
       {/* Recommendations */}
-      <Box sx={{ mt: 3, p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
-        <Typography variant="h6" gutterBottom>
+      <Box sx={{ mt: 3, p: 2, bgcolor: 'background.default', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+        <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
           Recommendations
         </Typography>
-        <Typography variant="body2">
-          • <strong>GCP offers the best value</strong> at ${(41660 * estimate.customerCount / 100000).toFixed(0)}/month
-          <br />
-          • Potential savings of ${((68100 - 41660) * estimate.customerCount / 100000).toFixed(0)}/month by choosing GCP over AWS
-          <br />
-          • GCP includes IOPS and has competitive observability pricing
-          <br />
-          • Consider AWS for the broadest service ecosystem and region coverage
+        <Typography variant="body2" component="div">
+          <Box component="ul" sx={{ m: 0, pl: 2 }}>
+            <li><strong>GCP offers the best value</strong> at {cheapest.provider === 'GCP' ? formatCurrency(cheapest.monthlyCost) : 'competitive rates'}/month</li>
+            <li>Potential savings by choosing the most cost-effective provider</li>
+            <li>GCP includes IOPS and has competitive observability pricing</li>
+            <li>Consider AWS for the broadest service ecosystem and region coverage</li>
+          </Box>
         </Typography>
       </Box>
-    </Paper>
+    </Box>
   );
 };
 

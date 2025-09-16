@@ -1,0 +1,13 @@
+Build a REST API for managing user accounts with the following features:
+- User registration with email and password
+- Login endpoint that returns JWT token
+- Get user profile endpoint
+- Update user profile endpoint
+- Delete user account endpoint
+- Password reset functionality
+- Email verification system
+- Rate limiting on all endpoints
+- Use PostgreSQL for data storage
+- Implement proper error handling
+- Add logging for all operations
+- Include unit tests for all endpoints

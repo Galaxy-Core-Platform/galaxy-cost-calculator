@@ -1,0 +1,112 @@
+{
+  "services": {
+    "proxima": {
+      "port": 8080,
+      "health_path": "/health",
+      "display_name": "Proxima",
+      "description": "Core Banking System"
+    },
+    "titan": {
+      "port": 5030,
+      "health_path": "/health",
+      "display_name": "Titan",
+      "description": "Products Factory",
+      "note": "Using actual running port 5030, not config 8083"
+    },
+    "orion": {
+      "port": 5010,
+      "health_path": "/health",
+      "display_name": "Orion",
+      "description": "Customer Management System"
+    },
+    "nebula": {
+      "port": 8084,
+      "health_path": "/health",
+      "display_name": "Nebula",
+      "description": "Customer Interaction Analytics"
+    },
+    "polaris": {
+      "port": 8090,
+      "health_path": "/health",
+      "display_name": "Polaris",
+      "description": "Configuration & Enum Management"
+    },
+    "aphelion": {
+      "port": 5040,
+      "health_path": "/health",
+      "display_name": "Aphelion",
+      "description": "Centralized Configuration Service"
+    },
+    "quasar": {
+      "port": 8087,
+      "health_path": "/health",
+      "display_name": "Quasar",
+      "description": "Verification Service"
+    },
+    "draco": {
+      "port": 8080,
+      "health_path": "/health",
+      "display_name": "Draco",
+      "description": "RBAC Backend System"
+    },
+    "pulsar": {
+      "port": 8085,
+      "health_path": "/health",
+      "display_name": "Pulsar",
+      "description": "Webhook Module",
+      "note": "Changed from 8084 to avoid conflict with Nebula"
+    },
+    "aster": {
+      "port": 9090,
+      "health_path": "/health",
+      "display_name": "Aster",
+      "description": "Universal Operation Approval Engine"
+    },
+    "krypton": {
+      "port": 8086,
+      "health_path": "/health",
+      "display_name": "Krypton",
+      "description": "Collateral Module"
+    },
+    "stellar": {
+      "port": 8000,
+      "health_path": "/health",
+      "display_name": "Stellar",
+      "description": "File Management Service"
+    },
+    "luna": {
+      "port": 5041,
+      "health_path": "/health",
+      "display_name": "Luna",
+      "description": "GenAI Assistant Backend",
+      "note": "Changed from 5040 to avoid conflict with Aphelion"
+    },
+    "horizon": {
+      "port": 5137,
+      "health_path": "/",
+      "display_name": "Horizon",
+      "description": "Front/Backoffice Tool"
+    }
+  },
+  "display_name_mapping": {
+    "Proxima": "proxima",
+    "Titan": "titan",
+    "Orion": "orion",
+    "Quasar": "quasar",
+    "Krypton": "krypton",
+    "Aster": "aster",
+    "Polaris": "polaris",
+    "Nebula": "nebula",
+    "Aphelion": "aphelion",
+    "Vortex": "nebula",
+    "Apex": "aphelion",
+    "Zenith": "polaris",
+    "Nova": "luna",
+    "Cosmos": "aster",
+    "Pulsar": "pulsar",
+    "Horizon": "horizon",
+    "Stellar": "stellar",
+    "Luna": "luna",
+    "Draco": "draco"
+  }
+}

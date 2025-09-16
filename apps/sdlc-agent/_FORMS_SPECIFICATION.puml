@@ -1,0 +1,473 @@
+@startuml SDLC_Forms_Specification
+!define FORMS
+
+' ============================================
+' STEP 0: Requirements Assessment Form
+' ============================================
+@startsalt step0_requirements_assessment
+{+
+  {/ <b>Requirements | Assessment | Recommendations | Summary | Artifacts }
+  {
+    == Requirements Input ==
+    Project Name *        | "                                        "
+    Boilerplate Template  | ^REST API Service                       ^
+    Requirements          | {+
+                             "Enter or upload requirements...       "
+                             "                                       "
+                             "                                       "
+                             "                                       "
+                           }
+    [X] Auto-verify on upload
+    
+    == Actions ==
+    [ Upload File ] | [ Assess ] | [ Recommend ] | [ Improve ] | [ YOLO Mode ]
+    
+    == Status ==
+    Workflow Status | "Ready                                    "
+    Quality Score   | "Not assessed                             "
+    
+    [ Next: API Design ]
+  }
+}
+@endsalt
+
+' ============================================
+' STEP 1: API Design Form
+' ============================================
+@startsalt step1_api_design
+{+
+  {/ <b>OpenAPI Spec | Endpoints | Models | Examples | Artifacts }
+  {
+    == API Configuration ==
+    API Title         | "                                        "
+    API Version       | "1.0.0                                   "
+    Base Path         | "/api/v1                                 "
+    
+    == Authentication ==
+    Auth Type         | ^JWT Bearer                              ^
+    [ ] Include OAuth2
+    [ ] API Key support
+    
+    == Endpoints ==
+    {T
+      + Method | Path          | Description       | Status
+      + GET    | /users        | List all users    | [Edit] [Delete]
+      + POST   | /users        | Create user       | [Edit] [Delete]
+      + GET    | /users/{id}   | Get user by ID    | [Edit] [Delete]
+    }
+    [ Add Endpoint ]
+    
+    == Actions ==
+    [ Generate OpenAPI ] | [ Validate ] | [ Import Swagger ] | [ YOLO Mode ]
+    
+    [ Previous ] | [ Next: Database Design ]
+  }
+}
+@endsalt
+
+' ============================================
+' STEP 2: Database Design Form
+' ============================================
+@startsalt step2_database_design
+{+
+  {/ <b>Schema | Tables | Relations | Migrations | Artifacts }
+  {
+    == Database Configuration ==
+    Database Type     | ^PostgreSQL                              ^
+    Database Name     | "app_database                            "
+    Schema Name       | "public                                  "
+    
+    == Tables ==
+    {T
+      + Table Name | Columns | Relations | Indexes
+      + users      | 8       | 2         | 3       | [Edit] [Delete]
+      + orders     | 12      | 4         | 2       | [Edit] [Delete]
+      + products   | 6       | 1         | 2       | [Edit] [Delete]
+    }
+    [ Add Table ] | [ Import Schema ]
+    
+    == Table Editor (users) ==
+    {T
+      + Column     | Type        | Constraints      | Default
+      + id         | UUID        | PRIMARY KEY      | gen_random_uuid()
+      + email      | VARCHAR(255)| UNIQUE NOT NULL  | -
+      + name       | VARCHAR(100)| NOT NULL         | -
+      + created_at | TIMESTAMP   | NOT NULL         | CURRENT_TIMESTAMP
+    }
+    [ Add Column ]
+    
+    == Actions ==
+    [ Generate SQL ] | [ Create Migrations ] | [ Validate Schema ] | [ YOLO Mode ]
+    
+    [ Previous ] | [ Next: Business Logic ]
+  }
+}
+@endsalt
+
+' ============================================
+' STEP 3: Business Logic Form
+' ============================================
+@startsalt step3_business_logic
+{+
+  {/ <b>Services | Handlers | Validators | Business Rules | Artifacts }
+  {
+    == Service Configuration ==
+    Architecture      | ^Clean Architecture                      ^
+    Pattern          | ^Repository + Service                     ^
+    [ ] Include CQRS
+    [ ] Event Sourcing
+    
+    == Services ==
+    {T
+      + Service       | Methods | Dependencies | Coverage
+      + UserService   | 12      | 3            | 95%     | [Edit] [Test]
+      + OrderService  | 8       | 4            | 88%     | [Edit] [Test]
+      + AuthService   | 6       | 2            | 92%     | [Edit] [Test]
+    }
+    [ Add Service ]
+    
+    == Business Rules ==
+    Rule Name        | "                                        "
+    Condition        | "                                        "
+    Action           | "                                        "
+    [ Add Rule ]
+    
+    == Actions ==
+    [ Generate Services ] | [ Generate Tests ] | [ Validate Logic ] | [ YOLO Mode ]
+    
+    [ Previous ] | [ Next: Validation ]
+  }
+}
+@endsalt
+
+' ============================================
+' STEP 4: Data Validation Form
+' ============================================
+@startsalt step4_validation
+{+
+  {/ <b>Validators | Rules | Sanitizers | Error Handling | Artifacts }
+  {
+    == Validation Configuration ==
+    Framework        | ^Joi / Zod / Class-validator             ^
+    Mode            | ^Strict                                   ^
+    [ ] Custom error messages
+    [ ] Localization support
+    
+    == Field Validators ==
+    {T
+      + Field      | Type    | Rules                    | Custom
+      + email      | string  | email, required          | [Edit]
+      + password   | string  | min:8, regex, required   | [Edit]
+      + age        | number  | min:18, max:120          | [Edit]
+      + phone      | string  | regex, optional          | [Edit]
+    }
+    [ Add Validator ]
+    
+    == Global Rules ==
+    [ ] Trim whitespace
+    [ ] Convert empty strings to null
+    [ ] Strip HTML tags
+    [ ] Normalize unicode
+    
+    == Actions ==
+    [ Generate Validators ] | [ Test Validators ] | [ Export Schema ] | [ YOLO Mode ]
+    
+    [ Previous ] | [ Next: Infrastructure ]
+  }
+}
+@endsalt
+
+' ============================================
+' STEP 5: Infrastructure Setup Form
+' ============================================
+@startsalt step5_infrastructure
+{+
+  {/ <b>Docker | Kubernetes | CI/CD | Monitoring | Artifacts }
+  {
+    == Container Configuration ==
+    Base Image       | ^node:18-alpine                          ^
+    Port            | "8000                                     "
+    [ ] Multi-stage build
+    [ ] Include health check
+    
+    == Services ==
+    {T
+      + Service    | Image           | Ports      | Replicas
+      + API        | app:latest      | 8000       | 3        | [Edit]
+      + Database   | postgres:15     | 5432       | 1        | [Edit]
+      + Redis      | redis:7         | 6379       | 1        | [Edit]
+      + Nginx      | nginx:alpine    | 80,443     | 2        | [Edit]
+    }
+    [ Add Service ]
+    
+    == Environment Variables ==
+    {T
+      + Variable         | Development  | Staging    | Production
+      + DATABASE_URL     | localhost    | staging-db | [SECRET]
+      + API_KEY          | dev-key      | [SECRET]   | [SECRET]
+      + LOG_LEVEL        | debug        | info       | error
+    }
+    [ Add Variable ]
+    
+    == Actions ==
+    [ Generate Docker ] | [ Generate K8s ] | [ Setup CI/CD ] | [ YOLO Mode ]
+    
+    [ Previous ] | [ Next: Security ]
+  }
+}
+@endsalt
+
+' ============================================
+' STEP 6: Security Configuration Form
+' ============================================
+@startsalt step6_security
+{+
+  {/ <b>Authentication | Authorization | Encryption | Audit | Artifacts }
+  {
+    == Authentication ==
+    Method          | ^JWT                                      ^
+    Token Expiry    | "24h                                      "
+    Refresh Token   | "7d                                       "
+    [ ] Multi-factor authentication
+    [ ] SSO integration
+    
+    == Authorization ==
+    Model           | ^RBAC                                     ^
+    {T
+      + Role       | Permissions                  | Users
+      + Admin      | ALL                          | 2     | [Edit]
+      + Manager    | READ, WRITE, DELETE          | 5     | [Edit]
+      + User       | READ, WRITE_OWN              | 100   | [Edit]
+    }
+    [ Add Role ]
+    
+    == Security Headers ==
+    [ ] CORS enabled
+    [ ] CSP headers
+    [ ] Rate limiting
+    [ ] Request validation
+    [ ] SQL injection protection
+    
+    == Encryption ==
+    Password Hash   | ^bcrypt                                   ^
+    Rounds         | "12                                        "
+    [ ] Data at rest encryption
+    [ ] TLS/SSL required
+    
+    == Actions ==
+    [ Generate Security ] | [ Run Audit ] | [ Penetration Test ] | [ YOLO Mode ]
+    
+    [ Previous ] | [ Next: Testing ]
+  }
+}
+@endsalt
+
+' ============================================
+' STEP 7: Testing Strategy Form
+' ============================================
+@startsalt step7_testing
+{+
+  {/ <b>Unit Tests | Integration | E2E | Performance | Artifacts }
+  {
+    == Test Configuration ==
+    Framework       | ^Jest / Pytest                            ^
+    Coverage Target | "90                                       " %
+    [ ] Watch mode
+    [ ] Parallel execution
+    
+    == Test Suites ==
+    {T
+      + Suite         | Tests | Passed | Failed | Coverage
+      + Unit          | 145   | 142    | 3      | 94%      | [Run]
+      + Integration   | 67    | 67     | 0      | 87%      | [Run]
+      + E2E           | 23    | 22     | 1      | 78%      | [Run]
+      + Performance   | 12    | 12     | 0      | N/A      | [Run]
+    }
+    [ Run All Tests ]
+    
+    == Failed Tests ==
+    {T
+      + Test                        | Error           | Action
+      + should_create_user          | Timeout         | [Debug] [Skip]
+      + validate_email_format       | AssertionError  | [Debug] [Skip]
+      + api_rate_limit_test        | 429 Expected    | [Debug] [Skip]
+    }
+    
+    == Performance Metrics ==
+    Response Time P95 | "245ms                                  "
+    Throughput       | "1200 req/s                              "
+    Error Rate       | "0.02%                                   "
+    
+    == Actions ==
+    [ Generate Tests ] | [ Run Coverage ] | [ Load Test ] | [ YOLO Mode ]
+    
+    [ Previous ] | [ Next: Documentation ]
+  }
+}
+@endsalt
+
+' ============================================
+' STEP 8: Documentation Form
+' ============================================
+@startsalt step8_documentation
+{+
+  {/ <b>README | API Docs | Guides | Architecture | Artifacts }
+  {
+    == Documentation Type ==
+    Format          | ^Markdown                                 ^
+    [ ] Include diagrams
+    [ ] API playground
+    [ ] Video tutorials
+    
+    == Sections ==
+    {T
+      + Section           | Status      | Last Updated
+      + README            | Complete    | 2024-01-15  | [Edit]
+      + Installation      | Complete    | 2024-01-15  | [Edit]
+      + API Reference     | In Progress | 2024-01-14  | [Edit]
+      + Architecture      | Draft       | 2024-01-10  | [Edit]
+      + Contributing      | Complete    | 2024-01-12  | [Edit]
+    }
+    [ Add Section ]
+    
+    == API Documentation ==
+    [ ] Auto-generate from OpenAPI
+    [ ] Include examples
+    [ ] Error codes reference
+    [ ] Rate limits documentation
+    
+    == Deployment Guide ==
+    Environment     | ^Production                               ^
+    [ Generate Guide ]
+    
+    == Actions ==
+    [ Generate Docs ] | [ Preview ] | [ Export PDF ] | [ YOLO Mode ]
+    
+    [ Previous ] | [ Next: Deployment ]
+  }
+}
+@endsalt
+
+' ============================================
+' STEP 9: Deployment Form
+' ============================================
+@startsalt step9_deployment
+{+
+  {/ <b>Environments | Pipeline | Monitoring | Rollback | Artifacts }
+  {
+    == Deployment Target ==
+    Environment     | ^Production                               ^
+    Platform        | ^AWS ECS                                  ^
+    Region          | ^us-east-1                                ^
+    
+    == Pre-deployment Checklist ==
+    [ ] All tests passing
+    [ ] Security scan complete
+    [ ] Documentation updated
+    [ ] Database migrations ready
+    [ ] Rollback plan defined
+    [ ] Monitoring configured
+    
+    == Deployment Status ==
+    {T
+      + Service    | Version | Status      | Health
+      + API        | 1.2.3   | Running     | Healthy   | [Logs]
+      + Worker     | 1.2.3   | Running     | Healthy   | [Logs]
+      + Database   | 1.2.2   | Running     | Healthy   | [Logs]
+    }
+    
+    == Monitoring ==
+    CPU Usage       | [████████░░░░░░░] 52%
+    Memory         | [██████████░░░░░] 68%
+    Requests/sec   | 1,247
+    Error Rate     | 0.01%
+    
+    == Actions ==
+    [ Deploy ] | [ Rollback ] | [ Scale ] | [ View Logs ] | [ YOLO Mode ]
+    
+    [ Previous ] | [ Complete Workflow ]
+  }
+}
+@endsalt
+
+' ============================================
+' GLOBAL WORKFLOW CONTROL FORM
+' ============================================
+@startsalt workflow_control
+{+
+  == SDLC Workflow Control ==
+  {
+    Current Step    | "Step 3: Business Logic                  "
+    Workflow ID     | "sdlc-2024-01-15-001                     "
+    Started        | "2024-01-15 10:30:00                      "
+    
+    == Progress ==
+    {T
+      + Step | Name                  | Status      | Duration
+      + 0    | Requirements          | ✓ Complete  | 5m
+      + 1    | API Design           | ✓ Complete  | 12m
+      + 2    | Database Design      | ✓ Complete  | 8m
+      + 3    | Business Logic       | ⚡ In Progress | 3m
+      + 4    | Validation          | ⏸ Pending   | -
+      + 5    | Infrastructure      | ⏸ Pending   | -
+      + 6    | Security            | ⏸ Pending   | -
+      + 7    | Testing             | ⏸ Pending   | -
+      + 8    | Documentation       | ⏸ Pending   | -
+      + 9    | Deployment          | ⏸ Pending   | -
+    }
+    
+    == Global Actions ==
+    [ Pause Workflow ] | [ Resume ] | [ Cancel ] | [ YOLO All Remaining ]
+    
+    == Notifications ==
+    [ ] Email on completion
+    [ ] Slack notifications
+    [ ] Webhook calls
+  }
+}
+@endsalt
+
+' ============================================
+' YOLO MODE CONFIGURATION FORM
+' ============================================
+@startsalt yolo_configuration
+{+
+  {/ <b>Settings | Permissions | Limits | Review }
+  {
+    == YOLO Mode Configuration ==
+    
+    == Automation Level ==
+    (*) Full Auto - No confirmations needed
+    ( ) Semi-Auto - Confirm major decisions
+    ( ) Guided - Review each step
+    
+    == Permitted Actions ==
+    [ ] Generate code without review
+    [ ] Apply database migrations
+    [ ] Deploy to staging
+    [ ] Deploy to production
+    [ ] Modify security settings
+    [ ] Delete resources
+    
+    == Safety Limits ==
+    Max Cost/hour   | "100                                     " USD
+    Max Resources   | "10                                      "
+    Timeout        | "60                                      " minutes
+    
+    == LLM Configuration ==
+    Model          | ^GPT-4                                    ^
+    Temperature    | "0.3                                      "
+    Max Tokens     | "4000                                     "
+    
+    == Review Requirements ==
+    [ ] Require review for production
+    [ ] Require review for security changes
+    [ ] Require review for data deletion
+    
+    == Actions ==
+    [ Save Configuration ] | [ Test YOLO ] | [ Reset Defaults ]
+  }
+}
+@endsalt
+
+@enduml

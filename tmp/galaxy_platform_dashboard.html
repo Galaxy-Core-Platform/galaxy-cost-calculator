@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galaxy Platform Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            color: #1a202c;
+            line-height: 1.6;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 32px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e2e8f0;
+        }
+
+        .platform-title {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .platform-subtitle {
+            color: #718096;
+            font-size: 1.125rem;
+            margin-bottom: 24px;
+            font-weight: 400;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background: white;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .filter-btn:hover {
+            background: #f7fafc;
+            border-color: #cbd5e0;
+        }
+
+        .filter-btn.active {
+            background: #4299e1;
+            color: white;
+            border-color: #4299e1;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-icon {
+            font-size: 1.25rem;
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 24px;
+        }
+
+        .app-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .app-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+            border-color: #cbd5e0;
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-healthy { background: #48bb78; }
+        .status-warning { background: #ed8936; }
+        .status-error { background: #f56565; }
+        .status-unknown { background: #a0aec0; }
+
+        .app-header {
+            margin-bottom: 16px;
+        }
+
+        .app-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .app-description {
+            color: #718096;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .tech-stack {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .tech-badge {
+            background: #edf2f7;
+            color: #4a5568;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .port-info {
+            background: #f0fff4;
+            color: #22543d;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            font-family: 'Monaco', monospace;
+        }
+
+        .app-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            color: #a0aec0;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.875rem;
+        }
+
+        .version-badge {
+            background: #bee3f8;
+            color: #2b6cb0;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .build-time {
+            color: #718096;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .owner-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .owner-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #4299e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.6rem;
+        }
+
+        .owner-name {
+            font-size: 0.875rem;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .app-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            text-align: center;
+            font-size: 0.875rem;
+            background: white;
+            color: #4a5568;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+            border-color: #4299e1;
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+            border-color: #48bb78;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:hover {
+            background: #3182ce;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .action-btn:not(.btn-primary):not(.btn-success):hover {
+            background: #f7fafc;
+            border-color: #cbd5e0;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .status-text {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.875rem;
+        }
+
+        .status-healthy .status-text { color: #22543d; }
+        .status-warning .status-text { color: #c05621; }
+        .status-error .status-text { color: #c53030; }
+        .status-unknown .status-text { color: #718096; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .apps-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .platform-title {
+                font-size: 1.875rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                min-width: auto;
+            }
+
+            .app-actions {
+                flex-direction: column;
+            }
+
+            .app-info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="header">
+            <h1 class="platform-title">🌌 Galaxy Platform</h1>
+            <p class="platform-subtitle">Core Banking & Financial Services Infrastructure</p>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalApps">17</div>
+                    <div class="stat-label">Total Apps</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="activeApps">14</div>
+                    <div class="stat-label">Active</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="rustApps">10</div>
+                    <div class="stat-label">Rust</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="pythonApps">2</div>
+                    <div class="stat-label">Python</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="toolsCount">5</div>
+                    <div class="stat-label">Tools</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <input type="text" class="search-box" placeholder="🔍 Search applications..." onkeyup="filterApplications(this.value)">
+                <div class="filter-group">
+                    <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
+                    <button class="filter-btn" data-filter="backend" onclick="setFilter('backend')">Backend</button>
+                    <button class="filter-btn" data-filter="frontend" onclick="setFilter('frontend')">Frontend</button>
+                    <button class="filter-btn" data-filter="tools" onclick="setFilter('tools')">Tools</button>
+                    <button class="filter-btn" data-filter="rust" onclick="setFilter('rust')">Rust</button>
+                    <button class="filter-btn" data-filter="python" onclick="setFilter('python')">Python</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Core Applications -->
+        <div class="section">
+            <h2 class="section-title">
+                <span class="section-icon">⚡</span>
+                Core Applications
+            </h2>
+            <div class="apps-grid" id="coreApps">
+                <!-- Applications will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Supporting Tools -->
+        <div class="section">
+            <h2 class="section-title">
+                <span class="section-icon">🛠️</span>
+                Supporting Tools
+            </h2>
+            <div class="apps-grid" id="toolsApps">
+                <!-- Tools will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Cloud Scripts -->
+        <div class="section">
+            <h2 class="section-title">
+                <span class="section-icon">☁️</span>
+                Cloud Infrastructure
+            </h2>
+            <div class="apps-grid" id="cloudApps">
+                <!-- Cloud scripts will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Application data based on your Galaxy Platform
+        const applications = {
+            core: [
+                {
+                    name: "Proxima",
+                    description: "Core Banking System - Main financial processing engine",
+                    owner: "Jaroslaw Sobel",
+                    tech: "Rust",
+                    techIcon: "🦞",
+                    category: "Backend",
+                    port: "5010",
+                    repo: "galaxy-proxima",
+                    version: "0.3.0",
+                    lastBuild: "2025-09-07 10:45:14",
+                    buildStatus: "healthy",
+                    buildDuration: "2m 34s"
+                },
+                {
+                    name: "Horizon",
+                    description: "Front-/backoffice tool - Administrative interface",
+                    owner: "Jaroslaw Sobel",
+                    tech: "React",
+                    techIcon: "⚛️",
+                    category: "Frontend",
+                    port: "5137",
+                    repo: "horizon",
+                    version: "1.2.5",
+                    lastBuild: "2025-09-06 14:22:31",
+                    buildStatus: "healthy",
+                    buildDuration: "1m 12s"
+                },
+                {
+                    name: "Orion",
+                    description: "Customer Management System - CRM and customer data",
+                    owner: "Miroslaw Forystek",
+                    tech: "Rust",
+                    techIcon: "🦞",
+                    category: "Backend",
+                    port: "5020",
+                    repo: "orion",
+                    version: "2.1.3",
+                    lastBuild: "2025-09-05 09:15:42",
+                    buildStatus: "warning",
+                    buildDuration: "3m 45s"
+                },
+                {
+                    name: "Titan",
+                    description: "Products Factory - Financial product configuration",
+                    owner: "Miroslaw Forystek",
+                    tech: "Rust",
+                    techIcon: "🦞",
+                    category: "Backend",
+                    port: "5030",
+                    repo: "titan",
+                    version: "1.8.2",
+                    lastBuild: "2025-09-07 08:30:15",
+                    buildStatus: "healthy",
+                    buildDuration: "2m 18s"
+                },
+                {
+                    name: "Draco",
+                    description: "RBAC Backend System - Role-based access control",
+                    owner: "Miroslaw Forystek",
+                    tech: "Rust",
+                    techIcon: "🦞",
+                    category: "Backend",
+                    port: "-",
+                    repo: "draco",
+                    version: "0.9.1",
+                    lastBuild: "2025-09-04 16:45:23",
+                    buildStatus: "healthy",
+                    buildDuration: "1m 58s"
+                },
+                {
+                    name: "Luna",
+                    description: "GenAI assistant backend - AI-powered customer support",
+                    owner: "Wojciech Ptasiński",
+                    tech: "Python",
+                    techIcon: "🐍",
+                    category: "Backend",
+                    port: "5040",
+                    repo: "luna",
+                    version: "3.2.1",
+                    lastBuild: "2025-09-07 11:22:08",
+                    buildStatus: "healthy",
+                    buildDuration: "4m 12s"
+                },
+                {
+                    name: "Stellar",
+                    description: "File Management Service - Document and media handling",
+                    owner: "Wojciech Ptasiński",
+                    tech: "Python",
+                    techIcon: "🐍",
+                    category: "Backend",
+                    port: "5050",
+                    repo: "stellar",
+                    version: "2.4.0",
+                    lastBuild: "2025-09-06 13:18:37",
+                    buildStatus: "healthy",
+                    buildDuration: "3m 25s"
+                },
+                {
+                    name: "Quasar",
+                    description: "Verification Service - Multi-factor authentication",
+                    owner: "Miroslaw Forystek",
+                    tech: "Rust",
+                    techIcon: "🦞",
+                    category: "Backend",
+                    port: "-",
+                    repo: "quasar",
+                    version: "1.5.3",
+                    lastBuild: "2025-09-03 10:42:19",
+                    buildStatus: "error",
+                    buildDuration: "Failed"
+                },
+                {
+                    name: "Pulsar",
+                    description: "Webhook Module - Event notifications and integrations",
+                    owner: "Miroslaw Forystek",
+                    tech: "Rust",
+                    techIcon: "🦞",
+                    category: "Backend",
+                    port: "-",
+                    repo: "pulsar",
+                    version: "0.7.2",
+                    lastBuild: "2025-09-07 07:15:44",
+                    buildStatus: "healthy",
+                    buildDuration: "1m 33s"
+                },
+                {
+                    name: "Polaris",
+                    description: "Configuration Management - Centralized settings",
+                    owner: "Miroslaw Forystek",
+                    tech: "Rust",
+                    techIcon: "🦞",
+                    category: "Backend",
+                    port: "-",
+                    repo: "polaris",
+                    version: "2.0.1",
+                    lastBuild: "2025-09-06 15:30:22",
+                    buildStatus: "healthy",
+                    buildDuration: "2m 05s"
+                },
+                {
+                    name: "Nebula",
+                    description: "Customer Analytics - Interaction logging and insights",
+                    owner: "Miroslaw Forystek",
+                    tech: "Rust",
+                    techIcon: "🦞",
+                    category: "Backend",
+                    port: "-",
+                    repo: "nebula",
+                    version: "1.3.4",
+                    lastBuild: "2025-09-05 12:48:17",
+                    buildStatus: "warning",
+                    buildDuration: "2m 52s"
+                }
+            ],
+            tools: [
+                {
+                    name: "Voyager",
+                    description: "Testing scripts - Automated testing framework",
+                    owner: "Jaroslaw Sobel",
+                    tech: "Python",
+                    techIcon: "🐍",
+                    category: "Tools",
+                    port: "n/a",
+                    repo: "-",
+                    version: "1.0.2",
+                    lastBuild: "2025-09-04 09:30:15",
+                    buildStatus: "healthy",
+                    buildDuration: "45s"
+                },
+                {
+                    name: "Ceres",
+                    description: "Product Factory & Customers Mockup Server",
+                    owner: "Jaroslaw Sobel",
+                    tech: "Python",
+                    techIcon: "🐍",
+                    category: "Tools",
+                    port: "-",
+                    repo: "-",
+                    version: "0.8.1",
+                    lastBuild: "2025-09-05 11:20:33",
+                    buildStatus: "healthy",
+                    buildDuration: "1m 05s"
+                },
+                {
+                    name: "Viking",
+                    description: "Deployment testing app - Infrastructure validation",
+                    owner: "Jaroslaw Sobel",
+                    tech: "Rust",
+                    techIcon: "🦞",
+                    category: "Tools",
+                    port: "8088",
+                    repo: "viking",
+                    version: "0.5.1",
+                    lastBuild: "2025-09-07 06:45:33",
+                    buildStatus: "healthy",
+                    buildDuration: "1m 22s"
+                },
+                {
+                    name: "Schemas",
+                    description: "Schema Validation Project - Data structure definitions",
+                    owner: "Team",
+                    tech: "JSON",
+                    techIcon: "📋",
+                    category: "Tools",
+                    port: "-",
+                    repo: "schemas",
+                    version: "2.1.0",
+                    lastBuild: "2025-09-06 11:20:45",
+                    buildStatus: "healthy",
+                    buildDuration: "12s"
+                },
+                {
+                    name: "Automation",
+                    description: "Database seed data and automation scripts",
+                    owner: "Team",
+                    tech: "Shell",
+                    techIcon: "🔧",
+                    category: "Tools",
+                    port: "-",
+                    repo: "automation",
+                    version: "1.4.3",
+                    lastBuild: "2025-09-05 14:15:28",
+                    buildStatus: "healthy",
+                    buildDuration: "28s"
+                }
+            ],
+            cloud: [
+                {
+                    name: "Terrain",
+                    description: "Cloud terraform scripts - Infrastructure as code",
+                    owner: "Jaroslaw Sobel",
+                    tech: "Terraform",
+                    techIcon: "🏗️",
+                    category: "Tools",
+                    port: "n/a",
+                    repo: "spark",
+                    version: "2.3.1",
+                    lastBuild: "2025-09-06 16:45:12",
+                    buildStatus: "healthy",
+                    buildDuration: "3m 15s"
+                }
+            ]
+        };
+
+        let currentFilter = 'all';
+        let searchTerm = '';
+
+        function initializeDashboard() {
+            renderApplications();
+            updateStats();
+        }
+
+        function renderApplications() {
+            renderSection('coreApps', applications.core);
+            renderSection('toolsApps', applications.tools);
+            renderSection('cloudApps', applications.cloud);
+        }
+
+        function renderSection(containerId, apps) {
+            const container = document.getElementById(containerId);
+            const filteredApps = filterApps(apps);
+            
+            container.innerHTML = filteredApps.map(app => createAppCard(app)).join('');
+        }
+
+        function createAppCard(app) {
+            const initials = app.owner.split(' ').map(n => n[0]).join('');
+            const statusClass = `status-${app.buildStatus}`;
+            
+            let statusText = '';
+            switch(app.buildStatus) {
+                case 'healthy': statusText = '✅ Healthy'; break;
+                case 'warning': statusText = '⚠️ Warning'; break;
+                case 'error': statusText = '❌ Error'; break;
+                default: statusText = '❓ Unknown'; break;
+            }
+            
+            return `
+                <div class="app-card" data-category="${app.category.toLowerCase()}" data-tech="${app.tech.toLowerCase()}" data-name="${app.name.toLowerCase()}">
+                    <div class="status-indicator ${statusClass}"></div>
+                    
+                    <div class="app-header">
+                        <div class="app-name">${app.name}</div>
+                        <div class="app-description">${app.description}</div>
+                    </div>
+
+                    <div class="tech-stack">
+                        <span class="tech-badge">
+                            <span>${app.techIcon}</span>
+                            <span>${app.tech}</span>
+                        </span>
+                        ${app.port !== '-' && app.port !== 'n/a' ? `<span class="port-info">:${app.port}</span>` : ''}
+                    </div>
+
+                    <div class="app-info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Version</span>
+                            <span class="version-badge">v${app.version}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Status</span>
+                            <span class="info-value status-text">${statusText}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Build</span>
+                            <span class="build-time">${app.lastBuild}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Duration</span>
+                            <span class="info-value">${app.buildDuration}</span>
+                        </div>
+                    </div>
+
+                    <div class="owner-info">
+                        <div class="owner-avatar">${initials}</div>
+                        <span class="owner-name">${app.owner}</span>
+                    </div>
+
+                    <div class="app-actions">
+                        <button class="action-btn btn-success" onclick="downloadApp('${app.name}')">
+                            📥 Download
+                        </button>
+                        <button class="action-btn btn-primary" onclick="viewBOM('${app.name}')">
+                            📋 BOM
+                        </button>
+                        <button class="action-btn" onclick="viewRepo('${app.repo}')">
+                            🔗 Repo
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function filterApps(apps) {
+            return apps.filter(app => {
+                const matchesSearch = searchTerm === '' || 
+                    app.name.toLowerCase().includes(searchTerm) ||
+                    app.description.toLowerCase().includes(searchTerm) ||
+                    app.tech.toLowerCase().includes(searchTerm) ||
+                    app.owner.toLowerCase().includes(searchTerm);
+
+                const matchesFilter = currentFilter === 'all' ||
+                    (currentFilter === 'backend' && app.category === 'Backend') ||
+                    (currentFilter === 'frontend' && app.category === 'Frontend') ||
+                    (currentFilter === 'tools' && app.category === 'Tools') ||
+                    (currentFilter === 'rust' && app.tech === 'Rust') ||
+                    (currentFilter === 'python' && app.tech === 'Python');
+
+                return matchesSearch && matchesFilter;
+            });
+        }
+
+        function updateStats() {
+            const allApps = [...applications.core, ...applications.tools, ...applications.cloud];
+            document.getElementById('totalApps').textContent = allApps.length;
+            document.getElementById('activeApps').textContent = allApps.filter(app => app.buildStatus === 'healthy').length;
+            document.getElementById('rustApps').textContent = allApps.filter(app => app.tech === 'Rust').length;
+            document.getElementById('pythonApps').textContent = allApps.filter(app => app.tech === 'Python').length;
+            document.getElementById('toolsCount').textContent = applications.tools.length;
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+            
+            renderApplications();
+        }
+
+        function filterApplications(search) {
+            searchTerm = search.toLowerCase();
+            renderApplications();
+        }
+
+        // Action functions
+        function downloadApp(appName) {
+            alert(`Downloading ${appName}...`);
+            // Implement actual download logic
+        }
+
+        function viewBOM(appName) {
+            alert(`Opening BOM for ${appName}...`);
+            // Navigate to BOM view
+        }
+
+        function viewRepo(repo) {
+            if (repo === '-') {
+                alert('Repository not available');
+                return;
+            }
+            window.open(`https://github.com/Galaxy-Core-Platform/${repo}`, '_blank');
+        }
+
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', initializeDashboard);
+    </script>
+</body>
+</html>

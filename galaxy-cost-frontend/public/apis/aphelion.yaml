@@ -1,0 +1,1308 @@
+openapi: 3.1.0
+info:
+  title: Aphelion Transaction Limits & Fees Service
+  version: 1.0.0
+  description: Banking transaction limits management and fee calculation service
+  contact:
+    name: Galaxy Platform Team
+    email: platform@galaxy.com
+  license:
+    name: Proprietary
+    identifier: proprietary
+  x-service-owner: payments-team
+  x-service-tier: core
+  x-service-classification: internal
+  x-api-audience: internal-services
+  x-data-sensitivity: medium
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: https://aphelion.galaxy-platform.com
+    description: Production server
+security:
+  - BearerAuth: []
+tags:
+  - name: Health
+    description: Health check endpoints
+    x-display-order: 1
+  - name: Limits
+    description: Transaction limit management
+    x-display-order: 2
+  - name: Usage
+    description: Usage tracking and reporting
+    x-display-order: 3
+  - name: Fees
+    description: Fee calculation and management
+    x-display-order: 4
+  - name: Enums
+    description: Enumeration values
+    x-display-order: 5
+paths:
+  /health:
+    get:
+      operationId: health_check
+      summary: Check service health
+      tags:
+        - Health
+      x-operationType: read
+      x-idempotent: true
+      x-owningDomain: platform
+      x-stability: stable
+      x-roles:
+        - public
+      x-scopes:
+        - health:read
+      x-slaTarget: 50ms
+      x-clientTimeout: 1000ms
+      x-pii: false
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /health/ready:
+    get:
+      operationId: readiness_check
+      summary: Check service readiness
+      tags:
+        - Health
+      x-operationType: read
+      x-idempotent: true
+      x-owningDomain: platform
+      x-stability: stable
+      x-roles:
+        - public
+      x-scopes:
+        - health:read
+      x-slaTarget: 50ms
+      x-clientTimeout: 1000ms
+      x-pii: false
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessStatus'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/limits/check:
+    post:
+      operationId: check_limit
+      summary: Check if a transaction is within limits
+      tags:
+        - Limits
+      x-operationType: read
+      x-idempotent: true
+      x-owningDomain: payments
+      x-stability: stable
+      x-roles:
+        - service
+        - admin
+      x-scopes:
+        - limits:read
+      x-slaTarget: 100ms
+      x-clientTimeout: 2000ms
+      x-pii: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckLimitRequest'
+      responses:
+        '200':
+          description: Limit check result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LimitCheckResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/limits/{actorId}:
+    get:
+      operationId: get_actor_limits
+      summary: Get limits for a specific actor
+      tags:
+        - Limits
+      x-operationType: read
+      x-idempotent: true
+      x-owningDomain: payments
+      x-stability: stable
+      x-roles:
+        - service
+        - admin
+      x-scopes:
+        - limits:read
+      x-slaTarget: 100ms
+      x-clientTimeout: 2000ms
+      x-pii: false
+      parameters:
+        - $ref: '#/components/parameters/ActorId'
+        - name: limit_type
+          in: query
+          schema:
+            type: string
+            enum:
+              - daily
+              - weekly
+              - monthly
+              - per_transaction
+          description: Filter by limit type
+      responses:
+        '200':
+          description: Actor limits
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActorLimits'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/usage/{actorId}:
+    get:
+      operationId: get_actor_usage
+      summary: Get usage statistics for an actor
+      tags:
+        - Usage
+      x-operationType: read
+      x-idempotent: true
+      x-owningDomain: payments
+      x-stability: stable
+      x-roles:
+        - service
+        - admin
+      x-scopes:
+        - usage:read
+      x-slaTarget: 100ms
+      x-clientTimeout: 2000ms
+      x-pii: false
+      parameters:
+        - $ref: '#/components/parameters/ActorId'
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum:
+              - day
+              - week
+              - month
+              - year
+          description: Usage period
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Start date for usage period
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: End date for usage period
+      responses:
+        '200':
+          description: Usage statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageStatistics'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/fees/{tenantId}/{countryCode}/{entityCode}/definitions:
+    get:
+      operationId: get_fee_definitions
+      summary: Get fee definitions for a tenant
+      tags:
+        - Fees
+      x-operationType: read
+      x-idempotent: true
+      x-owningDomain: payments
+      x-stability: stable
+      x-roles:
+        - service
+        - admin
+      x-scopes:
+        - fees:read
+      x-slaTarget: 100ms
+      x-clientTimeout: 2000ms
+      x-pii: false
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CountryCode'
+        - $ref: '#/components/parameters/EntityCode'
+        - name: fee_code
+          in: query
+          schema:
+            type: string
+          description: Filter by specific fee code
+        - name: active_only
+          in: query
+          schema:
+            type: boolean
+            default: true
+          description: Return only active fee definitions
+      responses:
+        '200':
+          description: Fee definitions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeeDefinitionList'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/fees/{tenantId}/{countryCode}/{entityCode}/calculate:
+    post:
+      operationId: calculate_fees
+      summary: Calculate applicable fees for a transaction
+      tags:
+        - Fees
+      x-operationType: read
+      x-idempotent: true
+      x-owningDomain: payments
+      x-stability: stable
+      x-roles:
+        - service
+        - admin
+      x-scopes:
+        - fees:calculate
+      x-slaTarget: 200ms
+      x-clientTimeout: 3000ms
+      x-pii: true
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CountryCode'
+        - $ref: '#/components/parameters/EntityCode'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalculateFeesRequest'
+      responses:
+        '200':
+          description: Calculated fees
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedFees'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/fees/{tenantId}/{countryCode}/{entityCode}/charge:
+    post:
+      operationId: charge_fees
+      summary: Charge fees for a transaction
+      tags:
+        - Fees
+      x-operationType: write
+      x-idempotent: false
+      x-owningDomain: payments
+      x-stability: stable
+      x-roles:
+        - service
+        - admin
+      x-scopes:
+        - fees:write
+      x-slaTarget: 500ms
+      x-clientTimeout: 5000ms
+      x-pii: true
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CountryCode'
+        - $ref: '#/components/parameters/EntityCode'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChargeFeesRequest'
+      responses:
+        '201':
+          description: Fees charged successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChargedFees'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/fees/operations:
+    get:
+      operationId: get_fee_operations
+      summary: Get fee operations history
+      tags:
+        - Fees
+      x-operationType: read
+      x-idempotent: true
+      x-owningDomain: payments
+      x-stability: stable
+      x-roles:
+        - service
+        - admin
+      x-scopes:
+        - fees:read
+      x-slaTarget: 200ms
+      x-clientTimeout: 3000ms
+      x-pii: true
+      parameters:
+        - name: customer_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by customer ID
+        - name: contract_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by contract ID
+        - name: fee_code
+          in: query
+          schema:
+            type: string
+          description: Filter by fee code
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - pending
+              - charged
+              - waived
+              - refunded
+              - failed
+          description: Filter by status
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Start date
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: End date
+        - $ref: '#/components/parameters/PageLimit'
+        - $ref: '#/components/parameters/PageOffset'
+      responses:
+        '200':
+          description: Fee operations list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeeOperationsList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/fees/health:
+    get:
+      operationId: fee_service_health
+      summary: Check fee service health
+      tags:
+        - Fees
+      x-operationType: read
+      x-idempotent: true
+      x-owningDomain: payments
+      x-stability: stable
+      x-roles:
+        - public
+      x-scopes:
+        - health:read
+      x-slaTarget: 50ms
+      x-clientTimeout: 1000ms
+      x-pii: false
+      responses:
+        '200':
+          description: Fee service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/enums:
+    get:
+      operationId: list_enums
+      summary: List available enum types
+      tags:
+        - Enums
+      x-operationType: read
+      x-idempotent: true
+      x-owningDomain: platform
+      x-stability: stable
+      x-roles:
+        - public
+      x-scopes:
+        - enums:read
+      x-slaTarget: 100ms
+      x-clientTimeout: 2000ms
+      x-pii: false
+      responses:
+        '200':
+          description: List of enum types
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnumTypeList'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/enums/{enumType}:
+    get:
+      operationId: get_enum
+      summary: Get values for a specific enum type
+      tags:
+        - Enums
+      x-operationType: read
+      x-idempotent: true
+      x-owningDomain: platform
+      x-stability: stable
+      x-roles:
+        - public
+      x-scopes:
+        - enums:read
+      x-slaTarget: 100ms
+      x-clientTimeout: 2000ms
+      x-pii: false
+      parameters:
+        - name: enumType
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Enum type identifier
+      responses:
+        '200':
+          description: Enum values
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnumValues'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required:
+        - status
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum:
+            - healthy
+            - degraded
+            - unhealthy
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+        database:
+          type: string
+          enum:
+            - connected
+            - disconnected
+        polaris_integration:
+          type: string
+          enum:
+            - connected
+            - disconnected
+            - fallback
+    ReadinessStatus:
+      allOf:
+        - $ref: '#/components/schemas/HealthStatus'
+        - type: object
+          properties:
+            ready:
+              type: boolean
+            checks:
+              type: object
+              properties:
+                database:
+                  type: boolean
+                polaris:
+                  type: boolean
+                cache:
+                  type: boolean
+    CheckLimitRequest:
+      type: object
+      required:
+        - actor_id
+        - actor_type
+        - transaction_type
+        - amount
+        - currency
+      properties:
+        actor_id:
+          type: string
+          format: uuid
+        actor_type:
+          type: string
+          enum:
+            - customer
+            - merchant
+            - account
+        transaction_type:
+          type: string
+          enum:
+            - withdrawal
+            - transfer
+            - payment
+            - purchase
+        amount:
+          type: number
+          format: decimal
+          minimum: 0
+        currency:
+          type: string
+          pattern: ^[A-Z]{3}$
+        channel:
+          type: string
+          enum:
+            - atm
+            - online
+            - mobile
+            - branch
+            - pos
+        geo_location:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+    LimitCheckResult:
+      type: object
+      required:
+        - allowed
+        - checked_at
+      properties:
+        allowed:
+          type: boolean
+        reason:
+          type: string
+        current_usage:
+          type: object
+          properties:
+            daily:
+              $ref: '#/components/schemas/UsageAmount'
+            weekly:
+              $ref: '#/components/schemas/UsageAmount'
+            monthly:
+              $ref: '#/components/schemas/UsageAmount'
+        applicable_limits:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicableLimit'
+        checked_at:
+          type: string
+          format: date-time
+    UsageAmount:
+      type: object
+      required:
+        - amount
+        - count
+        - limit_amount
+        - limit_count
+      properties:
+        amount:
+          type: number
+          format: decimal
+        count:
+          type: integer
+        limit_amount:
+          type: number
+          format: decimal
+        limit_count:
+          type: integer
+        percentage_used:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+    ApplicableLimit:
+      type: object
+      required:
+        - limit_id
+        - limit_type
+        - period
+        - amount
+      properties:
+        limit_id:
+          type: string
+          format: uuid
+        limit_type:
+          type: string
+          enum:
+            - standard
+            - custom
+            - temporary
+        period:
+          type: string
+          enum:
+            - per_transaction
+            - daily
+            - weekly
+            - monthly
+            - yearly
+        amount:
+          type: number
+          format: decimal
+        count:
+          type: integer
+        priority:
+          type: integer
+        effective_from:
+          type: string
+          format: date-time
+        effective_to:
+          type: string
+          format: date-time
+    ActorLimits:
+      type: object
+      required:
+        - actor_id
+        - actor_type
+        - limits
+      properties:
+        actor_id:
+          type: string
+          format: uuid
+        actor_type:
+          type: string
+          enum:
+            - customer
+            - merchant
+            - account
+        limits:
+          type: array
+          items:
+            $ref: '#/components/schemas/LimitDefinition'
+        override_limits:
+          type: array
+          items:
+            $ref: '#/components/schemas/LimitDefinition'
+    LimitDefinition:
+      type: object
+      required:
+        - id
+        - name
+        - transaction_type
+        - period
+        - amount
+        - active
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        transaction_type:
+          type: string
+        period:
+          type: string
+          enum:
+            - per_transaction
+            - daily
+            - weekly
+            - monthly
+            - yearly
+        amount:
+          type: number
+          format: decimal
+        count:
+          type: integer
+        currency:
+          type: string
+        channel:
+          type: string
+        active:
+          type: boolean
+        priority:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    UsageStatistics:
+      type: object
+      required:
+        - actor_id
+        - period
+        - statistics
+      properties:
+        actor_id:
+          type: string
+          format: uuid
+        period:
+          type: string
+        from_date:
+          type: string
+          format: date
+        to_date:
+          type: string
+          format: date
+        statistics:
+          type: object
+          properties:
+            total_amount:
+              type: number
+              format: decimal
+            total_count:
+              type: integer
+            average_amount:
+              type: number
+              format: decimal
+            max_amount:
+              type: number
+              format: decimal
+            by_type:
+              type: object
+              additionalProperties:
+                type: object
+                properties:
+                  amount:
+                    type: number
+                    format: decimal
+                  count:
+                    type: integer
+            by_channel:
+              type: object
+              additionalProperties:
+                type: object
+                properties:
+                  amount:
+                    type: number
+                    format: decimal
+                  count:
+                    type: integer
+            daily_breakdown:
+              type: array
+              items:
+                type: object
+                properties:
+                  date:
+                    type: string
+                    format: date
+                  amount:
+                    type: number
+                    format: decimal
+                  count:
+                    type: integer
+    FeeDefinition:
+      type: object
+      required:
+        - id
+        - fee_code
+        - fee_title
+        - fee_type
+        - active
+      properties:
+        id:
+          type: string
+          format: uuid
+        fee_code:
+          type: string
+        fee_title:
+          type: string
+        description:
+          type: string
+        fee_type:
+          type: string
+          enum:
+            - fixed
+            - percentage
+            - tiered
+            - hybrid
+        calculation_basis:
+          type: string
+          enum:
+            - transaction_amount
+            - account_balance
+            - flat
+        amount:
+          type: number
+          format: decimal
+        percentage:
+          type: number
+          format: float
+        min_amount:
+          type: number
+          format: decimal
+        max_amount:
+          type: number
+          format: decimal
+        currency:
+          type: string
+        tiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeeTier'
+        applicable_channels:
+          type: array
+          items:
+            type: string
+        applicable_operations:
+          type: array
+          items:
+            type: string
+        waivable:
+          type: boolean
+        active:
+          type: boolean
+        effective_from:
+          type: string
+          format: date
+        effective_to:
+          type: string
+          format: date
+    FeeTier:
+      type: object
+      required:
+        - min_amount
+        - max_amount
+        - fee_amount
+      properties:
+        min_amount:
+          type: number
+          format: decimal
+        max_amount:
+          type: number
+          format: decimal
+        fee_amount:
+          type: number
+          format: decimal
+        fee_percentage:
+          type: number
+          format: float
+    FeeDefinitionList:
+      type: object
+      required:
+        - definitions
+        - total_count
+      properties:
+        definitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeeDefinition'
+        total_count:
+          type: integer
+    CalculateFeesRequest:
+      type: object
+      required:
+        - customer_id
+        - contract_id
+        - operation_code
+        - amount
+        - currency
+      properties:
+        customer_id:
+          type: string
+          format: uuid
+        contract_id:
+          type: string
+          format: uuid
+        operation_code:
+          type: string
+        channel:
+          type: string
+        geo:
+          type: string
+        amount:
+          type: number
+          format: decimal
+        currency:
+          type: string
+        transaction_id:
+          type: string
+          format: uuid
+        simulate:
+          type: boolean
+          default: false
+    CalculatedFees:
+      type: object
+      required:
+        - total_fee
+        - currency
+        - fee_breakdown
+        - calculated_at
+      properties:
+        total_fee:
+          type: number
+          format: decimal
+        currency:
+          type: string
+        fee_breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeeBreakdown'
+        waivers_applied:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeeWaiver'
+        calculated_at:
+          type: string
+          format: date-time
+    FeeBreakdown:
+      type: object
+      required:
+        - fee_code
+        - fee_title
+        - amount
+      properties:
+        fee_code:
+          type: string
+        fee_title:
+          type: string
+        amount:
+          type: number
+          format: decimal
+        calculation_method:
+          type: string
+        waivable:
+          type: boolean
+    FeeWaiver:
+      type: object
+      required:
+        - fee_code
+        - waived_amount
+        - reason
+      properties:
+        fee_code:
+          type: string
+        waived_amount:
+          type: number
+          format: decimal
+        reason:
+          type: string
+        waiver_id:
+          type: string
+          format: uuid
+    ChargeFeesRequest:
+      type: object
+      required:
+        - calculation_request
+      properties:
+        calculation_request:
+          $ref: '#/components/schemas/CalculateFeesRequest'
+        charge_immediately:
+          type: boolean
+          default: true
+        external_reference:
+          type: string
+        notes:
+          type: string
+    ChargedFees:
+      type: object
+      required:
+        - charge_id
+        - total_charged
+        - currency
+        - status
+        - charged_at
+      properties:
+        charge_id:
+          type: string
+          format: uuid
+        total_charged:
+          type: number
+          format: decimal
+        currency:
+          type: string
+        status:
+          type: string
+          enum:
+            - pending
+            - charged
+            - failed
+            - waived
+            - refunded
+        fee_operations:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeeOperation'
+        charged_at:
+          type: string
+          format: date-time
+        transaction_id:
+          type: string
+          format: uuid
+    FeeOperation:
+      type: object
+      required:
+        - id
+        - fee_code
+        - amount
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        fee_code:
+          type: string
+        fee_title:
+          type: string
+        amount:
+          type: number
+          format: decimal
+        currency:
+          type: string
+        status:
+          type: string
+          enum:
+            - pending
+            - charged
+            - waived
+            - refunded
+            - failed
+        operation_date:
+          type: string
+          format: date-time
+        processed_at:
+          type: string
+          format: date-time
+        notes:
+          type: string
+        related_transaction_id:
+          type: string
+          format: uuid
+    FeeOperationsList:
+      type: object
+      required:
+        - operations
+        - total_count
+        - page_info
+      properties:
+        operations:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeeOperation'
+        total_count:
+          type: integer
+        page_info:
+          $ref: '#/components/schemas/PageInfo'
+    PageInfo:
+      type: object
+      required:
+        - limit
+        - offset
+        - has_next
+        - has_prev
+      properties:
+        limit:
+          type: integer
+        offset:
+          type: integer
+        has_next:
+          type: boolean
+        has_prev:
+          type: boolean
+    EnumTypeList:
+      type: object
+      required:
+        - enum_types
+      properties:
+        enum_types:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+              value_count:
+                type: integer
+    EnumValues:
+      type: object
+      required:
+        - enum_type
+        - values
+      properties:
+        enum_type:
+          type: string
+        values:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+              label:
+                type: string
+              description:
+                type: string
+              deprecated:
+                type: boolean
+              sort_order:
+                type: integer
+    Problem:
+      type: object
+      required:
+        - type
+        - title
+        - status
+      properties:
+        type:
+          type: string
+          format: uri
+          description: Problem type identifier
+          example: https://api.galaxy-platform.com/errors/validation-failed
+        title:
+          type: string
+          description: Human-readable summary
+          example: Validation Failed
+        status:
+          type: integer
+          description: HTTP status code
+          minimum: 100
+          maximum: 599
+          example: 400
+        detail:
+          type: string
+          description: Detailed explanation
+          example: The amount field must be greater than zero
+        instance:
+          type: string
+          format: uri
+          description: Problem instance identifier
+          example: https://api.galaxy-platform.com/api/v1/limits/check
+        errors:
+          type: array
+          description: Validation errors for specific fields
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: amount
+              message:
+                type: string
+                example: Must be greater than zero
+              code:
+                type: string
+                example: INVALID_AMOUNT
+  parameters:
+    ActorId:
+      name: actorId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Actor identifier (customer, merchant, or account ID)
+    TenantId:
+      name: tenantId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Tenant identifier
+    CountryCode:
+      name: countryCode
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^[A-Z]{2}$
+      description: ISO 3166-1 alpha-2 country code
+    EntityCode:
+      name: entityCode
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Business entity code
+    PageLimit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 1000
+        default: 100
+      description: Number of items to return
+    PageOffset:
+      name: offset
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      description: Number of items to skip
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    TooManyRequests:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ServiceUnavailable:
+      description: Service unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

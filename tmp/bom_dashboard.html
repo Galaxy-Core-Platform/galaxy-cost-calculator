@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Bill of Materials</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .app-title {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+
+        .app-subtitle {
+            color: #718096;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .download-btn, .view-toggle {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .view-toggle {
+            background: linear-gradient(135deg, #667eea, #5a67d8);
+        }
+
+        .view-toggle.active {
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+        }
+
+        .download-btn:hover, .view-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            fill: #667eea;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .info-value {
+            color: #718096;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9em;
+        }
+
+        .dependencies-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .dependencies-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .deps-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .deps-count {
+            background: #667eea;
+            color: white;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 1em;
+            background: white;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .sort-select, .items-per-page {
+            padding: 8px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            font-size: 0.9em;
+        }
+
+        /* List View Styles */
+        .list-view .dependency-item {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            padding: 15px 20px;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .list-view .dependency-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .list-view .dep-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .list-view .dep-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #2d3748;
+            min-width: 200px;
+        }
+
+        .list-view .dep-version {
+            background: #e2e8f0;
+            color: #4a5568;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .list-view .dep-sub-count {
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .list-view .expand-btn {
+            background: none;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .list-view .expand-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .sub-deps-expanded {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+            display: none;
+        }
+
+        .sub-deps-expanded.show {
+            display: block;
+        }
+
+        .sub-deps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .sub-dep {
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        /* Tree View Styles */
+        .tree-view {
+            display: none;
+        }
+
+        .tree-view.active {
+            display: block;
+        }
+
+        .tree-item {
+            margin: 5px 0;
+        }
+
+        .tree-node {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin: 2px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tree-node:hover {
+            background: #edf2f7;
+        }
+
+        .tree-toggle {
+            margin-right: 8px;
+            font-size: 0.8em;
+            color: #718096;
+            min-width: 15px;
+        }
+
+        .tree-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-right: 10px;
+        }
+
+        .tree-version {
+            background: #e2e8f0;
+            color: #4a5568;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+        }
+
+        .tree-children {
+            margin-left: 25px;
+            display: none;
+            border-left: 2px solid #e2e8f0;
+            padding-left: 15px;
+        }
+
+        .tree-children.show {
+            display: block;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: #4a5568;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .page-btn:hover {
+            background: #f7fafc;
+        }
+
+        .page-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-info {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .list-view .dependency-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .list-view .dep-info {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1 class="app-title">Proxima Application</h1>
+            <p class="app-subtitle">Bill of Materials & Version Information</p>
+            <div class="header-actions">
+                <button class="view-toggle" id="viewToggle" onclick="toggleView()">
+                    🌳 Tree View
+                </button>
+                <a href="#" class="download-btn" onclick="downloadBOM()">
+                    📥 Download BOM
+                </a>
+            </div>
+        </div>
+
+        <!-- Information Grid -->
+        <div class="info-grid">
+            <!-- Version Information -->
+            <div class="info-card">
+                <h3 class="card-title">
+                    <svg class="icon" viewBox="0 0 20 20">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Version Information
+                </h3>
+                <div class="info-item">
+                    <span class="info-label">Cargo Version</span>
+                    <span class="info-value">0.3.0</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Git Branch</span>
+                    <span class="info-value">develop</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Git Hash</span>
+                    <span class="info-value">3c221f6</span>
+                </div>
+            </div>
+
+            <!-- Build Information -->
+            <div class="info-card">
+                <h3 class="card-title">
+                    <svg class="icon" viewBox="0 0 20 20">
+                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                        <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                    Build Information
+                </h3>
+                <div class="info-item">
+                    <span class="info-label">Build Time</span>
+                    <span class="info-value">2025-09-07 10:45:14</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Rust Version</span>
+                    <span class="info-value">1.86.0</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Cargo Version</span>
+                    <span class="info-value">1.86.0</span>
+                </div>
+            </div>
+
+            <!-- Repository Information -->
+            <div class="info-card">
+                <h3 class="card-title">
+                    <svg class="icon" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z"/>
+                    </svg>
+                    Repository
+                </h3>
+                <div class="info-item">
+                    <span class="info-label">Name</span>
+                    <span class="info-value">proxima</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Generated</span>
+                    <span class="info-value">2025-09-07 08:45:19</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dependencies Section -->
+        <div class="dependencies-section">
+            <div class="dependencies-header">
+                <h2 class="deps-title">Dependencies</h2>
+                <span class="deps-count" id="depsCount">126 packages</span>
+            </div>
+            
+            <div class="controls">
+                <input type="text" class="search-box" placeholder="🔍 Search dependencies..." onkeyup="filterDependencies(this.value)">
+                <select class="sort-select" onchange="sortDependencies(this.value)">
+                    <option value="name">Sort by Name</option>
+                    <option value="version">Sort by Version</option>
+                    <option value="deps-count">Sort by Dependencies Count</option>
+                </select>
+                <select class="items-per-page" onchange="changeItemsPerPage(this.value)">
+                    <option value="25">25 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
+                    <option value="all">Show all</option>
+                </select>
+            </div>
+            
+            <!-- List View -->
+            <div class="dependencies-list list-view" id="listView">
+                <!-- Dependencies will be populated by JavaScript -->
+            </div>
+
+            <!-- Tree View -->
+            <div class="dependencies-tree tree-view" id="treeView">
+                <!-- Tree will be populated by JavaScript -->
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination">
+                <!-- Pagination will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Extended sample data with more dependencies
+        const bomData = {
+            "application": {
+                "name": "proxima",
+                "repository": "git@github.com:Galaxy-Core-Platform/proxima.git",
+                "path": "/Users/jaro/new_core/proxima"
+            },
+            "version_info": {
+                "git_hash": "3c221f61cafed70110daaa1be83bee579fefc457",
+                "git_branch": "develop",
+                "git_tag": "",
+                "cargo_version": "0.3.0"
+            },
+            "build_info": {
+                "timestamp": "20250907_104514",
+                "rust_version": "rustc 1.86.0 (05f9846f8 2025-03-31)",
+                "cargo_version": "cargo 1.86.0 (adf9b6ad1 2025-02-28)"
+            },
+            "dependencies": {
+                "dependencies": generateSampleDependencies(126), // Generate 126 sample dependencies
+                "total_count": 126
+            },
+            "generated_at": "2025-09-07T08:45:19CET"
+        };
+
+        // Global state
+        let currentView = 'list';
+        let currentPage = 1;
+        let itemsPerPage = 25;
+        let filteredDependencies = [...bomData.dependencies.dependencies];
+        let currentSort = 'name';
+
+        function generateSampleDependencies(count) {
+            const commonNames = ['actix', 'tokio', 'serde', 'clap', 'reqwest', 'anyhow', 'thiserror', 'uuid', 'chrono', 'regex', 'log', 'env_logger', 'futures', 'async-trait', 'tower', 'hyper', 'warp', 'axum', 'sqlx', 'diesel', 'redis', 'mongodb', 'postgresql', 'mysql', 'sqlite', 'rocksdb', 'leveldb', 'memcache', 'rabbitmq', 'kafka', 'nats', 'etcd', 'consul', 'vault', 'prometheus', 'grafana', 'jaeger', 'opentelemetry', 'tracing', 'metrics', 'benchmarks', 'criterion', 'proptest', 'quickcheck', 'mockall', 'wiremock', 'testcontainers', 'tempfile', 'once_cell', 'lazy_static', 'parking_lot', 'crossbeam', 'rayon', 'dashmap', 'arc-swap', 'flume', 'kanal', 'smol', 'async-std', 'surf', 'isahc', 'ureq', 'minreq', 'attohttpc', 'rustls', 'native-tls', 'openssl', 'ring', 'webpki', 'rustls-webpki', 'x509-parser', 'pem', 'der', 'asn1', 'base64', 'hex', 'sha2', 'sha3', 'md5', 'blake2', 'blake3', 'argon2', 'bcrypt', 'scrypt', 'pbkdf2', 'hmac', 'rand', 'rand_core', 'getrandom', 'fastrand', 'nanorand', 'oorandom', 'smallrng', 'chacha20poly1305', 'aes-gcm', 'aes', 'chacha20', 'salsa20', 'poly1305', 'ed25519', 'rsa', 'p256', 'p384', 'secp256k1', 'curve25519', 'x25519', 'ecdsa', 'dsa', 'ssh-key', 'ssh-cipher', 'ssh-encoding', 'libssh2-sys', 'git2', 'gix'];
+            const suffixes = ['-sys', '-core', '-codec', '-utils', '-derive', '-macros', '-proc-macro', '-test', '-dev', '-cli', '-server', '-client', '-api', '-web', '-http', '-tcp', '-udp', '-ws', '-grpc', '-json', '-xml', '-yaml', '-toml', '-csv', '-parser', '-lexer', '-formatter', '-validator', '-builder', '-factory', '-pool', '-cache', '-store', '-db', '-orm', '-migration', '-schema', '-query', '-transaction', '-connection', '-driver', '-connector', '-adapter', '-plugin', '-extension', '-middleware', '-handler', '-router', '-controller', '-service', '-worker', '-job', '-task', '-queue', '-stream', '-channel', '-buffer', '-ring', '-circular', '-linked', '-tree', '-graph', '-heap', '-stack', '-map', '-set', '-vec', '-slice', '-array', '-string', '-str', '-char', '-num', '-int', '-float', '-bool', '-option', '-result', '-error', '-panic', '-catch', '-try', '-match', '-pattern', '-regex', '-glob', '-path', '-file', '-dir', '-fs', '-io', '-net', '-socket', '-addr', '-port', '-host', '-domain', '-url', '-uri', '-mime', '-header', '-body', '-request', '-response', '-status', '-method', '-protocol', '-version', '-auth', '-oauth', '-jwt', '-token', '-session', '-cookie', '-csrf', '-cors', '-security', '-crypto', '-hash', '-digest', '-sign', '-verify', '-encrypt', '-decrypt', '-compress', '-decompress', '-zip', '-gzip', '-bzip2', '-lz4', '-zstd', '-snappy', '-brotli', '-deflate', '-inflate', '-archive', '-tar', '-rar', '-7z', '-image', '-png', '-jpg', '-gif', '-svg', '-pdf', '-html', '-css', '-js', '-ts', '-wasm', '-asm', '-llvm', '-jit', '-compile', '-interpret', '-vm', '-runtime', '-gc', '-memory', '-alloc', '-malloc', '-free', '-leak', '-profile', '-bench', '-perf', '-optimize', '-debug', '-trace', '-log', '-audit', '-monitor', '-alert', '-notify', '-email', '-sms', '-push', '-webhook', '-event', '-message', '-signal', '-broadcast', '-multicast', '-unicast', '-p2p', '-mesh', '-cluster', '-node', '-peer', '-discovery', '-registry', '-catalog', '-index', '-search', '-query', '-filter', '-sort', '-group', '-aggregate', '-reduce', '-map', '-fold', '-scan', '-iterate', '-loop', '-while', '-for', '-if', '-else', '-switch', '-case', '-default', '-break', '-continue', '-return', '-yield', '-await', '-async', '-sync', '-lock', '-mutex', '-rwlock', '-semaphore', '-barrier', '-latch', '-gate', '-flag', '-atomic', '-volatile', '-fence', '-ordering', '-acquire', '-release', '-relaxed', '-consume', '-acq_rel', '-seq_cst'];
+            
+            const dependencies = [];
+            const usedNames = new Set();
+            
+            for (let i = 0; i < count; i++) {
+                let name;
+                do {
+                    const baseName = commonNames[Math.floor(Math.random() * commonNames.length)];
+                    const suffix = Math.random() > 0.7 ? suffixes[Math.floor(Math.random() * suffixes.length)] : '';
+                    name = baseName + suffix;
+                } while (usedNames.has(name));
+                
+                usedNames.add(name);
+                
+                const major = Math.floor(Math.random() * 10);
+                const minor = Math.floor(Math.random() * 20);
+                const patch = Math.floor(Math.random() * 50);
+                const version = `${major}.${minor}.${patch}`;
+                
+                const depCount = Math.floor(Math.random() * 15) + 1;
+                const subDependencies = [];
+                for (let j = 0; j < depCount; j++) {
+                    const subName = commonNames[Math.floor(Math.random() * commonNames.length)];
+                    if (!subDependencies.includes(subName)) {
+                        subDependencies.push(subName);
+                    }
+                }
+                
+                dependencies.push({
+                    name: name,
+                    version: version,
+                    source: "registry+https://github.com/rust-lang/crates.io-index",
+                    dependencies: subDependencies
+                });
+            }
+            
+            return dependencies.sort((a, b) => a.name.localeCompare(b.name));
+        }
+
+        function initializePage() {
+            updateDepsCount();
+            renderCurrentView();
+        }
+
+        function updateDepsCount() {
+            document.getElementById('depsCount').textContent = `${filteredDependencies.length} packages`;
+        }
+
+        function toggleView() {
+            const toggle = document.getElementById('viewToggle');
+            const listView = document.getElementById('listView');
+            const treeView = document.getElementById('treeView');
+            
+            if (currentView === 'list') {
+                currentView = 'tree';
+                toggle.textContent = '📋 List View';
+                toggle.classList.add('active');
+                listView.style.display = 'none';
+                treeView.classList.add('active');
+                renderTreeView();
+            } else {
+                currentView = 'list';
+                toggle.textContent = '🌳 Tree View';
+                toggle.classList.remove('active');
+                listView.style.display = 'block';
+                treeView.classList.remove('active');
+                renderListView();
+            }
+        }
+
+        function renderCurrentView() {
+            if (currentView === 'list') {
+                renderListView();
+            } else {
+                renderTreeView();
+            }
+        }
+
+        function renderListView() {
+            const container = document.getElementById('listView');
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = itemsPerPage === 'all' ? filteredDependencies.length : Math.min(startIndex + itemsPerPage, filteredDependencies.length);
+            const pageItems = filteredDependencies.slice(startIndex, endIndex);
+            
+            container.innerHTML = pageItems.map((dep, index) => `
+                <div class="dependency-item" data-name="${dep.name.toLowerCase()}">
+                    <div class="dep-info">
+                        <div class="dep-name">${dep.name}</div>
+                        <div class="dep-version">${dep.version}</div>
+                        <div class="dep-sub-count">${dep.dependencies.length} deps</div>
+                    </div>
+                    <button class="expand-btn" onclick="toggleExpanded(${startIndex + index})">▼</button>
+                    <div class="sub-deps-expanded" id="expanded-${startIndex + index}">
+                        <div class="sub-deps">
+                            ${dep.dependencies.map(subDep => `<span class="sub-dep">${subDep}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            if (itemsPerPage !== 'all') {
+                renderPagination();
+            } else {
+                document.getElementById('pagination').innerHTML = '';
+            }
+        }
+
+        function renderTreeView() {
+            const container = document.getElementById('treeView');
+            container.innerHTML = filteredDependencies.map((dep, index) => `
+                <div class="tree-item">
+                    <div class="tree-node" onclick="toggleTreeNode(${index})">
+                        <span class="tree-toggle" id="toggle-${index}">▶</span>
+                        <span class="tree-name">${dep.name}</span>
+                        <span class="tree-version">${dep.version}</span>
+                    </div>
+                    <div class="tree-children" id="children-${index}">
+                        ${dep.dependencies.map(subDep => `
+                            <div class="tree-node" style="margin-left: 0;">
+                                <span class="tree-toggle"></span>
+                                <span class="tree-name">${subDep}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleExpanded(index) {
+            const expanded = document.getElementById(`expanded-${index}`);
+            const button = expanded.previousElementSibling;
+            
+            if (expanded.classList.contains('show')) {
+                expanded.classList.remove('show');
+                button.textContent = '▼';
+            } else {
+                expanded.classList.add('show');
+                button.textContent = '▲';
+            }
+        }
+
+        function toggleTreeNode(index) {
+            const children = document.getElementById(`children-${index}`);
+            const toggle = document.getElementById(`toggle-${index}`);
+            
+            if (children.classList.contains('show')) {
+                children.classList.remove('show');
+                toggle.textContent = '▶';
+            } else {
+                children.classList.add('show');
+                toggle.textContent = '

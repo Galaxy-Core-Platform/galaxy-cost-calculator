@@ -1,0 +1,192 @@
+# Galaxy Platform Services Port Configuration
+# Generated from actual service configurations in /Users/mifo/Desktop/Galaxy
+# Last updated: 2025-09-02
+
+services:
+  # Core Banking Services
+  proxima:
+    name: "Proxima - Core Banking System"
+    port: 8080
+    health_endpoint: "/health"
+    owner: "@Jaroslaw Sobel"
+    tech: "Rust"
+    repo: "galaxy-proxima"
+    status: "configured"
+    
+  titan:
+    name: "Titan - Products Factory"
+    port: 8083
+    health_endpoint: "/health"
+    owner: "@miroslaw.forystek"
+    tech: "Rust"
+    repo: "titan"
+    status: "configured"
+    notes: "Currently running on 5030 in dev"
+    
+  orion:
+    name: "Orion - Customer Management System"
+    port: 5010
+    health_endpoint: "/health"
+    owner: "@miroslaw.forystek"
+    tech: "Rust"
+    repo: "orion"
+    status: "running"
+    notes: "Confirmed running on this port"
+    
+  # Analytics & Monitoring
+  nebula:
+    name: "Nebula - Customer Interaction Analytics"
+    port: 8084
+    health_endpoint: "/health"
+    owner: "@miroslaw.forystek"
+    tech: "Rust"
+    repo: "nebula"
+    status: "configured"
+    notes: "Also referenced as PORT=9010 in Makefile"
+    
+  # Configuration Services
+  polaris:
+    name: "Polaris - Configuration & Enum Management"
+    port: 8090
+    health_endpoint: "/health"
+    owner: "@miroslaw.forystek"
+    tech: "Rust"
+    repo: "polaris"
+    status: "configured"
+    
+  aphelion:
+    name: "Aphelion - Centralized Configuration Service"
+    port: 5040
+    health_endpoint: "/health"
+    owner: "@miroslaw.forystek"
+    tech: "Rust"
+    repo: "aphelion"
+    status: "configured"
+    
+  # Security & Verification
+  quasar:
+    name: "Quasar - Verification Service"
+    port: 8087
+    health_endpoint: "/health"
+    owner: "@miroslaw.forystek"
+    tech: "Rust"
+    repo: "quasar"
+    status: "configured"
+    notes: "Two-factor authentication for payments"
+    
+  draco:
+    name: "Draco - RBAC Backend System"
+    port: 8080
+    health_endpoint: "/health"
+    owner: "@miroslaw.forystek"
+    tech: "Rust"
+    repo: "draco"
+    status: "configured"
+    notes: "Default port in Makefile, may conflict with others"
+    
+  # Event & Webhook Services
+  pulsar:
+    name: "Pulsar - Webhook Module"
+    port: 8084
+    health_endpoint: "/health"
+    owner: "@miroslaw.forystek"
+    tech: "Rust"
+    repo: "pulsar"
+    status: "configured"
+    notes: "Conflicts with nebula port - needs resolution"
+    
+  # Approval & Workflow
+  aster:
+    name: "Aster - Universal Operation Approval Engine"
+    port: 9090
+    health_endpoint: "/health"
+    owner: "@miroslaw.forystek"
+    tech: "Rust"
+    repo: "aster"
+    status: "configured"
+    notes: "Multi-party authorization support"
+    
+  # Financial Services
+  krypton:
+    name: "Krypton - Collateral Module"
+    port: 8086
+    health_endpoint: "/health"
+    owner: "@miroslaw.forystek"
+    tech: "Rust"
+    repo: "krypton"
+    status: "configured"
+    
+  # AI & File Management
+  stellar:
+    name: "Stellar - File Management Service"
+    port: 8000
+    health_endpoint: "/health"
+    owner: "@Wojciech Ptasiński"
+    tech: "Python"
+    repo: "stellar"
+    status: "configured"
+    
+  luna:
+    name: "Luna - GenAI Assistant Backend"
+    port: 5040
+    health_endpoint: "/health"
+    owner: "@Wojciech Ptasiński"
+    tech: "Python"
+    repo: "luna"
+    status: "not_found"
+    notes: "Port from Assets.md, conflicts with aphelion"
+    
+  # Frontend
+  horizon:
+    name: "Horizon - Front/Backoffice Tool"
+    port: 5137
+    health_endpoint: "/health"
+    owner: "@Jaroslaw Sobel"
+    tech: "React"
+    repo: "horizon"
+    status: "dynamic"
+    notes: "Frontend app, port is dynamic"
+
+# Port Conflicts Detected:
+conflicts:
+  - services: ["nebula", "pulsar"]
+    port: 8084
+    resolution: "Needs different ports assigned"
+    
+  - services: ["aphelion", "luna"]
+    port: 5040
+    resolution: "Luna service not found in repo, may need different port"
+    
+  - services: ["proxima", "draco"]
+    port: 8080
+    resolution: "Both using default 8080, need unique ports"
+
+# Available Port Ranges:
+port_ranges:
+  rust_services: "8080-8099"
+  python_services: "8000-8019"
+  dev_services: "5000-5099"
+  frontend_apps: "3000-3099, 5100-5199"
+  
+# Recommendations:
+recommendations:
+  - "Resolve port conflicts before deployment"
+  - "Consider using environment-specific port configurations"
+  - "Implement service discovery for dynamic port allocation"
+  - "Use reverse proxy (nginx) for production deployment"
+  
+# Database Ports (PostgreSQL):
+databases:
+  default_postgres: 5432
+  services_using_postgres:
+    - proxima
+    - titan
+    - orion
+    - nebula
+    - polaris
+    - aphelion
+    - quasar
+    - draco
+    - pulsar
+    - aster
+    - krypton
