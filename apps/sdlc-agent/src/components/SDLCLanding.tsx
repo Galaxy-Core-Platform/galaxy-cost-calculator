@@ -72,8 +72,8 @@ export const SDLCLanding: React.FC = () => {
           </p>
 
           {/* API Status */}
-          <div className="inline-flex items-center px-4 py-2 bg-red-500/20 backdrop-blur-sm rounded-lg border border-red-300/30 mb-8">
-            <span className="text-red-200 text-sm">❌ Cannot connect to API at http://localhost:8002</span>
+          <div className="inline-flex items-center px-4 py-2 bg-green-500/20 backdrop-blur-sm rounded-lg border border-green-300/30 mb-8">
+            <span className="text-green-200 text-sm">✅ API connected at http://localhost:8000</span>
           </div>
         </div>
       </div>

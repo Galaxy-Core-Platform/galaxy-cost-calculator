@@ -3,6 +3,9 @@ import ReactMarkdown from 'react-markdown';
 import { boilerplateTemplates, getBoilerplateByName } from '../config/boilerplates';
 import { boilerplateService } from '../services/boilerplateService';
 import { TIMEOUTS } from '../config/app.config';
+import plantumlEncoder from 'plantuml-encoder';
+import { ChatClient, createChatSession } from '../services/ChatClient';
+import type { ChatMessage, ChatSession } from '../services/ChatClient';
 
 interface QualityMetric {
   name: string;
@@ -21,7 +24,7 @@ interface LLMProvider {
 export const GalaxySDLC: React.FC = () => {
   const [projectName, setProjectName] = useState('');
   const [boilerplateTemplate, setBoilerplateTemplate] = useState('');
-  const [activeTab, setActiveTab] = useState<'summary' | 'requirements' | 'recommendations' | 'plan' | 'boilerplate' | 'log'>('requirements');
+  const [activeTab, setActiveTab] = useState<'summary' | 'requirements' | 'process workflows' | 'recommendations' | 'plan' | 'boilerplate' | 'log'>('requirements');
   const [userQuestion, setUserQuestion] = useState('');
   const [overallScore, setOverallScore] = useState(0);
   const [llmProviders, setLlmProviders] = useState<LLMProvider[]>([]);
@@ -62,6 +65,20 @@ export const GalaxySDLC: React.FC = () => {
   });
   const [processing, setProcessing] = useState(false);
 
+  // PlantUML state
+  const [plantUmlSchemas, setPlantUmlSchemas] = useState<Array<{id: string, name: string, content: string}>>([]);
+  const [plantUmlWorkflows, setPlantUmlWorkflows] = useState<Array<{id: string, name: string, content: string}>>([]);
+  const [showPlantUmlEditor, setShowPlantUmlEditor] = useState(false);
+  const [currentSchema, setCurrentSchema] = useState<{id: string, name: string, content: string} | null>(null);
+  const [editorType, setEditorType] = useState<'schema' | 'workflow'>('schema');
+
+  // New chat state variables (don't touch existing userQuestion state)
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatSession, setChatSession] = useState<ChatSession | null>(null);
+  const [chatClient, setChatClient] = useState<ChatClient | null>(null);
+  const [chatConnected, setChatConnected] = useState(false);
+  const [chatLoading, setChatLoading] = useState(false);
+
   const processSteps = [
     { id: 1, name: 'Setup', description: 'Bootstrap & Requirements' },
     { id: 2, name: 'APIs', description: 'OpenAPI Specification' },
@@ -70,6 +87,342 @@ export const GalaxySDLC: React.FC = () => {
     { id: 5, name: 'Logic', description: 'Business Logic' },
     { id: 6, name: 'Tests', description: 'Testing & Release' }
   ];
+
+  // Initialize with sample PlantUML schemas
+  useEffect(() => {
+    if (plantUmlSchemas.length === 0) {
+      setPlantUmlSchemas([
+        {
+          id: 'user-schema',
+          name: 'User Schema',
+          content: `@startuml
+class User {
+  +id: UUID
+  +username: String
+  +email: String
+  +password_hash: String
+  +created_at: DateTime
+  +updated_at: DateTime
+}
+
+class Role {
+  +id: UUID
+  +name: String
+  +description: String
+}
+
+class UserRole {
+  +user_id: UUID
+  +role_id: UUID
+  +assigned_at: DateTime
+}
+
+User ||--o{ UserRole
+Role ||--o{ UserRole
+@enduml`
+        },
+        {
+          id: 'order-schema',
+          name: 'Order Schema',
+          content: `@startuml
+class Order {
+  +id: UUID
+  +user_id: UUID
+  +status: String
+  +total: Decimal
+  +created_at: DateTime
+}
+
+class OrderItem {
+  +id: UUID
+  +order_id: UUID
+  +product_id: UUID
+  +quantity: Integer
+  +price: Decimal
+}
+
+class Product {
+  +id: UUID
+  +name: String
+  +description: Text
+  +price: Decimal
+  +stock: Integer
+}
+
+Order ||--o{ OrderItem
+Product ||--o{ OrderItem
+@enduml`
+        }
+      ]);
+    }
+  }, []);
+
+  // Initialize with sample PlantUML workflows
+  useEffect(() => {
+    if (plantUmlWorkflows.length === 0) {
+      setPlantUmlWorkflows([
+        {
+          id: 'user-registration-flow',
+          name: 'User Registration Process',
+          content: `@startuml
+title User Registration Workflow
+
+start
+
+:User visits registration page;
+:Fill registration form;
+:Submit form;
+
+if (Valid data?) then (yes)
+  :Store user data;
+  :Send confirmation email;
+  if (Email verified?) then (yes)
+    :Activate account;
+    :Login user;
+    :Redirect to dashboard;
+    end
+  else (no)
+    :Show pending verification;
+    stop
+  endif
+else (no)
+  :Show validation errors;
+  :Return to form;
+  stop
+endif
+
+@enduml`
+        },
+        {
+          id: 'order-processing-flow',
+          name: 'Order Processing Workflow',
+          content: `@startuml
+title Order Processing Workflow
+
+|Customer|
+start
+:Browse products;
+:Add to cart;
+:Proceed to checkout;
+:Enter payment details;
+
+|System|
+:Validate payment;
+if (Payment valid?) then (yes)
+  :Process payment;
+  :Create order;
+  :Update inventory;
+
+  |Fulfillment|
+  :Pick items;
+  :Package order;
+  :Ship to customer;
+
+  |Customer|
+  :Receive order;
+  end
+else (no)
+  |Customer|
+  :Show payment error;
+  :Retry payment;
+  stop
+endif
+
+@enduml`
+        },
+        {
+          id: 'api-request-flow',
+          name: 'API Request Lifecycle',
+          content: `@startuml
+title API Request Processing
+
+actor Client
+participant "API Gateway" as Gateway
+participant "Auth Service" as Auth
+participant "Business Logic" as Logic
+participant "Database" as DB
+
+Client -> Gateway: HTTP Request
+Gateway -> Auth: Validate Token
+Auth --> Gateway: Token Valid
+
+alt Token Valid
+  Gateway -> Logic: Forward Request
+  Logic -> DB: Query/Update Data
+  DB --> Logic: Return Data
+  Logic --> Gateway: Response
+  Gateway --> Client: HTTP 200 + Data
+else Token Invalid
+  Gateway --> Client: HTTP 401 Unauthorized
+end
+
+@enduml`
+        }
+      ]);
+    }
+  }, []);
+
+  // PlantUML helper functions
+  const generatePlantUMLUrl = (plantUmlText: string) => {
+    try {
+      const encoded = plantumlEncoder.encode(plantUmlText);
+      return `http://www.plantuml.com/plantuml/svg/${encoded}`;
+    } catch (error) {
+      console.error('Error encoding PlantUML:', error);
+      return '';
+    }
+  };
+
+  const openSchemaEditor = (schema: {id: string, name: string, content: string}) => {
+    setCurrentSchema(schema);
+    setEditorType('schema');
+    setShowPlantUmlEditor(true);
+  };
+
+  const openWorkflowEditor = (workflow: {id: string, name: string, content: string}) => {
+    setCurrentSchema(workflow);
+    setEditorType('workflow');
+    setShowPlantUmlEditor(true);
+  };
+
+  const saveSchema = (id: string, name: string, content: string) => {
+    if (editorType === 'schema') {
+      setPlantUmlSchemas(prev =>
+        prev.map(schema =>
+          schema.id === id
+            ? { ...schema, name, content }
+            : schema
+        )
+      );
+    } else {
+      setPlantUmlWorkflows(prev =>
+        prev.map(workflow =>
+          workflow.id === id
+            ? { ...workflow, name, content }
+            : workflow
+        )
+      );
+    }
+    setCurrentSchema(null);
+    setShowPlantUmlEditor(false);
+  };
+
+  const createNewSchema = () => {
+    const newId = `schema-${Date.now()}`;
+    const newSchema = {
+      id: newId,
+      name: 'New Schema',
+      content: `@startuml
+class NewEntity {
+  +id: UUID
+  +name: String
+  +created_at: DateTime
+}
+@enduml`
+    };
+    setPlantUmlSchemas(prev => [...prev, newSchema]);
+    openSchemaEditor(newSchema);
+  };
+
+  const createNewWorkflow = () => {
+    const newId = `workflow-${Date.now()}`;
+    const newWorkflow = {
+      id: newId,
+      name: 'New Workflow',
+      content: `@startuml
+title New Process Workflow
+
+start
+:Step 1;
+:Step 2;
+if (Condition?) then (yes)
+  :Action A;
+else (no)
+  :Action B;
+endif
+:Final step;
+end
+
+@enduml`
+    };
+    setPlantUmlWorkflows(prev => [...prev, newWorkflow]);
+    openWorkflowEditor(newWorkflow);
+  };
+
+  // New chat initialization functions
+  const initializeChat = async (step: number) => {
+    if (chatLoading || chatConnected) return chatClient;
+
+    setChatLoading(true);
+    try {
+      const contextType = getContextTypeForStep(step);
+      const initialContext = getInitialContextForStep(step);
+
+      // Create chat session
+      const session = await createChatSession(contextType, initialContext);
+      setChatSession(session);
+
+      // Create and connect chat client
+      const client = new ChatClient(session.session_id);
+
+      client.onMessage((message) => {
+        setChatMessages(prev => [...prev, message]);
+      });
+
+      client.onStatusUpdate((status) => {
+        console.log('Chat status update:', status);
+      });
+
+      await client.connect();
+      setChatClient(client);
+      setChatConnected(true);
+
+      return client; // Return the client for immediate use
+
+    } catch (error) {
+      console.error('Failed to initialize chat:', error);
+      return null;
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const getContextTypeForStep = (step: number): string => {
+    switch (step) {
+      case 1: return 'requirements_improvement';
+      case 2: return 'api_design';
+      case 3: return 'data_modeling';
+      case 4: return 'schema_design';
+      case 5: return 'business_logic';
+      case 6: return 'testing_strategy';
+      default: return 'custom';
+    }
+  };
+
+  const getInitialContextForStep = (step: number) => {
+    switch (step) {
+      case 1:
+        return {
+          requirements_text: requirementsContent || '',
+          project_name: projectName || '',
+          boilerplate: boilerplateTemplate || '',
+          workflows: plantUmlWorkflows
+        };
+      case 4:
+        return {
+          project_name: projectName || '',
+          database_type: stepData[4]?.databaseType || 'PostgreSQL',
+          existing_schema: stepData[4]?.schema || '',
+          plantuml_schemas: plantUmlSchemas,
+          requirements: requirementsContent || ''
+        };
+      default:
+        return {
+          requirements: requirementsContent || '',
+          project_name: projectName || ''
+        };
+    }
+  };
 
   // Load available LLM models on component mount
   useEffect(() => {
@@ -462,10 +815,36 @@ export const GalaxySDLC: React.FC = () => {
     }
   };
 
-  const handleSendQuestion = () => {
+  const handleSendQuestion = async () => {
     if (userQuestion.trim()) {
-      console.log('Sending question:', userQuestion);
+      // Store the question before clearing
+      const questionToSend = userQuestion;
+
+      // Add user message to chat immediately
+      const userMessage: ChatMessage = {
+        message_id: `user-${Date.now()}`,
+        session_id: chatSession?.session_id || '',
+        sender: 'user',
+        content: questionToSend,
+        timestamp: new Date().toISOString(),
+        message_type: 'answer'
+      };
+      setChatMessages(prev => [...prev, userMessage]);
       setUserQuestion('');
+
+      // Initialize chat if not connected and get client
+      let client = chatClient;
+      if (!chatConnected && !chatLoading) {
+        client = await initializeChat(1); // Returns the client directly
+      }
+
+      // Send to backend
+      if (client) {
+        client.sendMessage(questionToSend);
+        console.log('Message sent:', questionToSend);
+      } else {
+        console.log('Chat client not available, message lost:', questionToSend);
+      }
     }
   };
 
@@ -1662,8 +2041,45 @@ describe('UserService', () => {
 
             {/* Message Area - Expands to fill space */}
             <div className="bg-gray-50 p-4 flex-grow overflow-y-auto">
-              <div className="bg-white rounded-lg px-3 py-2 text-sm text-gray-700 border border-gray-200">
-                Hello. I'll ask my questions here.
+              <div className="space-y-2">
+                {chatMessages.length === 0 ? (
+                  <div className="bg-white rounded-lg px-3 py-2 text-sm text-gray-700 border border-gray-200">
+                    {chatConnected
+                      ? "Hello! I can help you improve your requirements. Ask me anything!"
+                      : (chatLoading
+                        ? "Connecting to assistant..."
+                        : "Hello. I'll ask my questions here.")}
+                  </div>
+                ) : (
+                  chatMessages.map((message, index) => (
+                    <div
+                      key={index}
+                      className={`rounded-lg px-3 py-2 text-sm ${
+                        message.sender === 'user'
+                          ? 'bg-blue-100 text-blue-800 ml-8'
+                          : 'bg-white text-gray-700 border border-gray-200'
+                      }`}
+                    >
+                      {message.content}
+                      {message.options && message.options.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {message.options.map((option, optIndex) => (
+                            <button
+                              key={optIndex}
+                              onClick={() => {
+                                setUserQuestion(option);
+                                setTimeout(handleSendQuestion, 100);
+                              }}
+                              className="px-2 py-1 text-xs bg-blue-50 text-blue-600 border border-blue-200 rounded hover:bg-blue-100 transition"
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -1689,16 +2105,16 @@ describe('UserService', () => {
           </div>
         </div>
 
-        {/* Center Content - Column 4-9 */}
-        <div className="col-span-6 bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
+        {/* Center Content - Expanded width */}
+        <div className="col-span-7 bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
           {/* Tabs */}
           <div className="flex border-b bg-gray-50">
-            {['Summary', 'Requirements', 'Recommendations', 'Plan', 'Boilerplate', 'Activity Log'].map((tab) => (
+            {['Summary', 'Requirements', 'Process Workflows', 'Advice', 'Plan', 'Boilerplate', 'Activity Log'].map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab === 'Activity Log' ? 'log' : tab.toLowerCase() as any)}
-                className={`flex-1 px-3 py-2.5 text-sm font-medium transition ${
-                  activeTab === (tab === 'Activity Log' ? 'log' : tab.toLowerCase())
+                onClick={() => setActiveTab(tab === 'Activity Log' ? 'log' : (tab === 'Process Workflows' ? 'process workflows' : tab.toLowerCase()) as any)}
+                className={`flex-1 px-3 py-2.5 text-[10px] font-medium transition ${
+                  activeTab === (tab === 'Activity Log' ? 'log' : (tab === 'Process Workflows' ? 'process workflows' : tab.toLowerCase()))
                     ? 'text-indigo-600 border-b-2 border-indigo-600 bg-white'
                     : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
                 }`}
@@ -1843,6 +2259,51 @@ describe('UserService', () => {
                   <p className="text-sm">Please upload requirements first to see the summary</p>
                 </div>
               )
+            )}
+
+            {activeTab === 'process workflows' && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold text-gray-800">Process Workflows</h3>
+                  <button
+                    onClick={createNewWorkflow}
+                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition"
+                  >
+                    + New Workflow
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {plantUmlWorkflows.map((workflow) => (
+                    <div key={workflow.id} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h4 className="font-semibold text-gray-800">{workflow.name}</h4>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {workflow.content.split('\n').length} lines
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => openWorkflowEditor(workflow)}
+                          className="px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {plantUmlWorkflows.length === 0 && (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500 mb-2">No workflows created yet.</p>
+                      <button
+                        onClick={createNewWorkflow}
+                        className="text-indigo-600 hover:text-indigo-700 font-medium"
+                      >
+                        Create your first workflow
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
 
             {activeTab === 'recommendations' && (
@@ -1994,8 +2455,8 @@ describe('UserService', () => {
           </div>
         </div>
 
-        {/* Right Sidebar - Column 10-12 */}
-        <div className="col-span-3 bg-white rounded-xl shadow-lg p-5 flex flex-col h-full">
+        {/* Right Sidebar - Reduced width */}
+        <div className="col-span-2 bg-white rounded-xl shadow-lg p-5 flex flex-col h-full">
           {/* Quality Score */}
           <div className="text-center mb-4">
             <h3 className="text-sm font-medium text-gray-600 mb-3">Quality Score</h3>
@@ -2005,24 +2466,17 @@ describe('UserService', () => {
           </div>
 
           {/* Quality Metrics - Scrollable - Takes up remaining space */}
-          <div className="flex-grow overflow-y-auto mb-4 pr-2">
-            <div className="space-y-2">
+          <div className="flex-grow overflow-y-auto mb-4">
+            <div className="space-y-1">
               {qualityMetrics.map((metric) => (
                 <div key={metric.name} className="flex items-center justify-between">
-                  <span className="text-xs text-gray-600">{metric.name}</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-20 bg-gray-200 rounded-full h-1.5">
-                      <div
-                        className={`h-1.5 rounded-full ${
-                          metric.color === 'green' ? 'bg-green-500' : 'bg-orange-500'
-                        }`}
-                        style={{ width: `${metric.value}%` }}
-                      />
-                    </div>
-                    <span className="text-xs font-medium text-gray-700 w-8 text-right">
-                      {metric.value}%
-                    </span>
-                  </div>
+                  <span className="text-[10px] text-gray-600 truncate">{metric.name}</span>
+                  <span className={`text-[10px] font-bold text-white px-2 py-0.5 rounded ml-2 ${
+                    metric.value >= 70 ? 'bg-green-500' :
+                    metric.value >= 50 ? 'bg-orange-500' : 'bg-red-500'
+                  }`}>
+                    {metric.value}%
+                  </span>
                 </div>
               ))}
             </div>
@@ -2052,7 +2506,7 @@ describe('UserService', () => {
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 }`}
               >
-                Recommend
+                Advise
               </button>
               <button
                 disabled={recommendations.length === 0}
@@ -2063,7 +2517,7 @@ describe('UserService', () => {
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 }`}
               >
-                Improve
+                Apply
               </button>
             </div>
 
@@ -2129,7 +2583,7 @@ describe('UserService', () => {
             {currentStep === 2 && (
               <>
                 {/* Step 2: APIs - Left Panel */}
-                <div className="col-span-3 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
+                <div className="col-span-2 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
                   {/* Project Name - Not Editable */}
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2209,17 +2663,19 @@ describe('UserService', () => {
                 </div>
 
                 {/* Step 2: APIs - Center Panel with Tabs */}
-                <div className="col-span-6 bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
+                <div className="col-span-7 bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
                   {/* Tabs */}
                   <div className="flex border-b bg-gray-50">
-                    {['API Endpoints', 'API Specification', 'Requirements', 'Recommendations', 'Activity Log'].map((tab) => (
+                    {['API Endpoints', 'API Specification', 'Requirements', 'Advice', 'Activity Log'].map((tab) => (
                       <button
                         key={tab}
                         onClick={() => handleStepDataChange(2, 'activeTab', tab)}
-                        className={`flex-1 px-3 py-2.5 text-sm font-medium transition ${
+                        className={`flex-1 px-3 py-2.5 text-[10px] font-medium transition ${
                           (stepData[2]?.activeTab || 'API Specification') === tab
                             ? 'text-indigo-600 border-b-2 border-indigo-600 bg-white'
+                      + ' ' + 'text-[10px]'
                             : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                      + ' ' + 'text-[10px]'
                         }`}
                       >
                         {tab}
@@ -2254,7 +2710,7 @@ describe('UserService', () => {
                       </pre>
                     )}
 
-                    {(stepData[2]?.activeTab || 'API Specification') === 'Recommendations' && (
+                    {(stepData[2]?.activeTab || 'API Specification') === 'Advice' && (
                       <div className="space-y-4">
                         {recommendations.length > 0 ? (
                           <>
@@ -2298,7 +2754,7 @@ describe('UserService', () => {
                 </div>
 
                 {/* Step 2: APIs - Right Panel */}
-                <div className="col-span-3 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
+                <div className="col-span-2 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
                   {/* Quality Score Section - Always show, 0% when not assessed */}
                   <div className="text-center mb-4">
                     <h3 className="text-sm font-medium text-gray-600 mb-3">Quality Score</h3>
@@ -2346,7 +2802,7 @@ describe('UserService', () => {
                             : 'bg-indigo-600 text-white hover:bg-indigo-700'
                         }`}
                       >
-                        Recommend
+                        Advise
                       </button>
                       <button
                         onClick={() => handleStepImprove(2)}
@@ -2357,7 +2813,7 @@ describe('UserService', () => {
                             : 'bg-indigo-600 text-white hover:bg-indigo-700'
                         }`}
                       >
-                        Improve
+                        Apply
                       </button>
                     </div>
 
@@ -2396,7 +2852,7 @@ describe('UserService', () => {
             {currentStep === 3 && (
               <>
                 {/* Step 3: Model - Left Panel */}
-                <div className="col-span-3 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
+                <div className="col-span-2 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
                   {/* Project Name - Not Editable */}
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2476,17 +2932,19 @@ describe('UserService', () => {
                 </div>
 
                 {/* Step 3: Model - Center Panel with Tabs */}
-                <div className="col-span-6 bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
+                <div className="col-span-7 bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
                   {/* Tabs */}
                   <div className="flex border-b bg-gray-50">
-                    {['Entities', 'Data Model', 'Requirements', 'Recommendations', 'Activity Log'].map((tab) => (
+                    {['Entities', 'Data Model', 'Requirements', 'Advice', 'Activity Log'].map((tab) => (
                       <button
                         key={tab}
                         onClick={() => handleStepDataChange(3, 'activeTab', tab)}
-                        className={`flex-1 px-3 py-2.5 text-sm font-medium transition ${
+                        className={`flex-1 px-3 py-2.5 text-[10px] font-medium transition ${
                           (stepData[3]?.activeTab || 'Data Model') === tab
                             ? 'text-indigo-600 border-b-2 border-indigo-600 bg-white'
+                      + ' ' + 'text-[10px]'
                             : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                      + ' ' + 'text-[10px]'
                         }`}
                       >
                         {tab}
@@ -2522,7 +2980,7 @@ describe('UserService', () => {
                       </pre>
                     )}
 
-                    {(stepData[3]?.activeTab || 'Data Model') === 'Recommendations' && (
+                    {(stepData[3]?.activeTab || 'Data Model') === 'Advice' && (
                       <div className="space-y-4">
                         {recommendations.length > 0 ? (
                           <>
@@ -2566,7 +3024,7 @@ describe('UserService', () => {
                 </div>
 
                 {/* Step 3: Model - Right Panel */}
-                <div className="col-span-3 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
+                <div className="col-span-2 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
                   {/* Quality Score Section - Only show if artifact exists */}
                   {hasArtifact(3) && (
                     <div className="text-center mb-4">
@@ -2616,7 +3074,7 @@ describe('UserService', () => {
                             : 'bg-indigo-600 text-white hover:bg-indigo-700'
                         }`}
                       >
-                        Recommend
+                        Advise
                       </button>
                       <button
                         onClick={() => handleStepImprove(3)}
@@ -2627,7 +3085,7 @@ describe('UserService', () => {
                             : 'bg-indigo-600 text-white hover:bg-indigo-700'
                         }`}
                       >
-                        Improve
+                        Apply
                       </button>
                     </div>
 
@@ -2666,7 +3124,7 @@ describe('UserService', () => {
             {currentStep === 4 && (
               <>
                 {/* Step 4: Schema - Left Panel */}
-                <div className="col-span-3 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
+                <div className="col-span-2 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
                   {/* Project Name - Not Editable */}
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2746,17 +3204,19 @@ describe('UserService', () => {
                 </div>
 
                 {/* Step 4: Schema - Center Panel with Tabs */}
-                <div className="col-span-6 bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
+                <div className="col-span-7 bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
                   {/* Tabs */}
                   <div className="flex border-b bg-gray-50">
-                    {['Tables', 'Schema SQL', 'Migrations', 'Recommendations', 'Activity Log'].map((tab) => (
+                    {['Tables', 'Schema SQL', 'Migrations', 'PlantUML Schemas', 'Advice', 'Activity Log'].map((tab) => (
                       <button
                         key={tab}
                         onClick={() => handleStepDataChange(4, 'activeTab', tab)}
-                        className={`flex-1 px-3 py-2.5 text-sm font-medium transition ${
+                        className={`flex-1 px-3 py-2.5 text-[10px] font-medium transition ${
                           (stepData[4]?.activeTab || 'Schema SQL') === tab
                             ? 'text-indigo-600 border-b-2 border-indigo-600 bg-white'
+                      + ' ' + 'text-[10px]'
                             : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                      + ' ' + 'text-[10px]'
                         }`}
                       >
                         {tab}
@@ -2796,7 +3256,52 @@ describe('UserService', () => {
                       </div>
                     )}
 
-                    {(stepData[4]?.activeTab || 'Schema SQL') === 'Recommendations' && (
+                    {(stepData[4]?.activeTab || 'Schema SQL') === 'PlantUML Schemas' && (
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h3 className="text-lg font-semibold text-gray-800">PlantUML Database Schemas</h3>
+                          <button
+                            onClick={createNewSchema}
+                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition"
+                          >
+                            + New Schema
+                          </button>
+                        </div>
+                        <div className="space-y-3">
+                          {plantUmlSchemas.map((schema) => (
+                            <div key={schema.id} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <h4 className="font-semibold text-gray-800">{schema.name}</h4>
+                                  <p className="text-sm text-gray-600 mt-1">
+                                    {schema.content.split('\n').length} lines
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={() => openSchemaEditor(schema)}
+                                  className="px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition"
+                                >
+                                  Edit
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                          {plantUmlSchemas.length === 0 && (
+                            <div className="text-center py-8">
+                              <p className="text-gray-500 mb-2">No schemas created yet.</p>
+                              <button
+                                onClick={createNewSchema}
+                                className="text-indigo-600 hover:text-indigo-700 font-medium"
+                              >
+                                Create your first schema
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {(stepData[4]?.activeTab || 'Schema SQL') === 'Advice' && (
                       <div className="space-y-4">
                         {recommendations.length > 0 ? (
                           <>
@@ -2840,7 +3345,7 @@ describe('UserService', () => {
                 </div>
 
                 {/* Step 4: Schema - Right Panel */}
-                <div className="col-span-3 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
+                <div className="col-span-2 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
                   {/* Quality Score Section - Only show if artifact exists */}
                   {hasArtifact(4) && (
                     <div className="text-center mb-4">
@@ -2890,7 +3395,7 @@ describe('UserService', () => {
                             : 'bg-indigo-600 text-white hover:bg-indigo-700'
                         }`}
                       >
-                        Recommend
+                        Advise
                       </button>
                       <button
                         onClick={() => handleStepImprove(4)}
@@ -2901,7 +3406,7 @@ describe('UserService', () => {
                             : 'bg-indigo-600 text-white hover:bg-indigo-700'
                         }`}
                       >
-                        Improve
+                        Apply
                       </button>
                     </div>
 
@@ -2940,7 +3445,7 @@ describe('UserService', () => {
             {currentStep === 5 && (
               <>
                 {/* Step 5: Logic - Left Panel */}
-                <div className="col-span-3 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
+                <div className="col-span-2 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
                   {/* Project Name - Not Editable */}
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -3020,17 +3525,19 @@ describe('UserService', () => {
                 </div>
 
                 {/* Step 5: Logic - Center Panel with Tabs */}
-                <div className="col-span-6 bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
+                <div className="col-span-7 bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
                   {/* Tabs */}
                   <div className="flex border-b bg-gray-50">
-                    {['Services', 'Business Logic', 'Business Rules', 'Recommendations', 'Activity Log'].map((tab) => (
+                    {['Services', 'Business Logic', 'Business Rules', 'Advice', 'Activity Log'].map((tab) => (
                       <button
                         key={tab}
                         onClick={() => handleStepDataChange(5, 'activeTab', tab)}
-                        className={`flex-1 px-3 py-2.5 text-sm font-medium transition ${
+                        className={`flex-1 px-3 py-2.5 text-[10px] font-medium transition ${
                           (stepData[5]?.activeTab || 'Business Logic') === tab
                             ? 'text-indigo-600 border-b-2 border-indigo-600 bg-white'
+                      + ' ' + 'text-[10px]'
                             : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                      + ' ' + 'text-[10px]'
                         }`}
                       >
                         {tab}
@@ -3073,7 +3580,7 @@ describe('UserService', () => {
                       </div>
                     )}
 
-                    {(stepData[5]?.activeTab || 'Business Logic') === 'Recommendations' && (
+                    {(stepData[5]?.activeTab || 'Business Logic') === 'Advice' && (
                       <div className="space-y-4">
                         {recommendations.length > 0 ? (
                           <>
@@ -3117,7 +3624,7 @@ describe('UserService', () => {
                 </div>
 
                 {/* Step 5: Logic - Right Panel */}
-                <div className="col-span-3 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
+                <div className="col-span-2 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
                   {/* Quality Score Section - Only show if artifact exists */}
                   {hasArtifact(5) && (
                     <div className="text-center mb-4">
@@ -3167,7 +3674,7 @@ describe('UserService', () => {
                             : 'bg-indigo-600 text-white hover:bg-indigo-700'
                         }`}
                       >
-                        Recommend
+                        Advise
                       </button>
                       <button
                         onClick={() => handleStepImprove(5)}
@@ -3178,7 +3685,7 @@ describe('UserService', () => {
                             : 'bg-indigo-600 text-white hover:bg-indigo-700'
                         }`}
                       >
-                        Improve
+                        Apply
                       </button>
                     </div>
 
@@ -3217,7 +3724,7 @@ describe('UserService', () => {
             {currentStep === 6 && (
               <>
                 {/* Step 6: Tests - Left Panel */}
-                <div className="col-span-3 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
+                <div className="col-span-2 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
                   {/* Project Name - Not Editable */}
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -3297,17 +3804,19 @@ describe('UserService', () => {
                 </div>
 
                 {/* Step 6: Tests - Center Panel with Tabs */}
-                <div className="col-span-6 bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
+                <div className="col-span-7 bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
                   {/* Tabs */}
                   <div className="flex border-b bg-gray-50">
-                    {['Test Suites', 'Test Code', 'Coverage', 'Recommendations', 'Activity Log'].map((tab) => (
+                    {['Test Suites', 'Test Code', 'Coverage', 'Advice', 'Activity Log'].map((tab) => (
                       <button
                         key={tab}
                         onClick={() => handleStepDataChange(6, 'activeTab', tab)}
-                        className={`flex-1 px-3 py-2.5 text-sm font-medium transition ${
+                        className={`flex-1 px-3 py-2.5 text-[10px] font-medium transition ${
                           (stepData[6]?.activeTab || 'Test Code') === tab
                             ? 'text-indigo-600 border-b-2 border-indigo-600 bg-white'
+                      + ' ' + 'text-[10px]'
                             : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                      + ' ' + 'text-[10px]'
                         }`}
                       >
                         {tab}
@@ -3350,7 +3859,7 @@ describe('UserService', () => {
                       </div>
                     )}
 
-                    {(stepData[6]?.activeTab || 'Test Code') === 'Recommendations' && (
+                    {(stepData[6]?.activeTab || 'Test Code') === 'Advice' && (
                       <div className="space-y-4">
                         {recommendations.length > 0 ? (
                           <>
@@ -3394,7 +3903,7 @@ describe('UserService', () => {
                 </div>
 
                 {/* Step 6: Tests - Right Panel */}
-                <div className="col-span-3 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
+                <div className="col-span-2 bg-white rounded-xl shadow-lg p-5 h-full flex flex-col">
                   {/* Quality Score Section - Only show if artifact exists */}
                   {hasArtifact(6) && (
                     <div className="text-center mb-4">
@@ -3444,7 +3953,7 @@ describe('UserService', () => {
                             : 'bg-indigo-600 text-white hover:bg-indigo-700'
                         }`}
                       >
-                        Recommend
+                        Advise
                       </button>
                       <button
                         onClick={() => handleStepImprove(6)}
@@ -3455,7 +3964,7 @@ describe('UserService', () => {
                             : 'bg-indigo-600 text-white hover:bg-indigo-700'
                         }`}
                       >
-                        Improve
+                        Apply
                       </button>
                     </div>
 
@@ -3552,6 +4061,103 @@ describe('UserService', () => {
             </div>
           </div>
         </>
+      )}
+
+      {/* PlantUML Editor Modal */}
+      {showPlantUmlEditor && currentSchema && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-11/12 h-5/6 max-w-7xl max-h-screen overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-4 border-b">
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  {editorType === 'schema' ? 'Edit PlantUML Schema' : 'Edit Process Workflow'}
+                </h2>
+                <input
+                  type="text"
+                  value={currentSchema.name}
+                  onChange={(e) => setCurrentSchema({...currentSchema, name: e.target.value})}
+                  className="px-3 py-1 border border-gray-300 rounded text-sm font-medium"
+                  placeholder="Schema name"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => saveSchema(currentSchema.id, currentSchema.name, currentSchema.content)}
+                  className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => {
+                    setCurrentSchema(null);
+                    setShowPlantUmlEditor(false);
+                  }}
+                  className="px-4 py-2 bg-gray-500 text-white text-sm font-medium rounded-lg hover:bg-gray-600 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content - Split Pane */}
+            <div className="flex h-full">
+              {/* Left Pane - Editor */}
+              <div className="w-1/2 border-r flex flex-col">
+                <div className="p-3 bg-gray-50 border-b">
+                  <h3 className="text-sm font-medium text-gray-700">{editorType === 'schema' ? 'PlantUML Source' : 'Workflow Source'}</h3>
+                </div>
+                <div className="flex-1 p-0">
+                  <textarea
+                    value={currentSchema.content}
+                    onChange={(e) => setCurrentSchema({...currentSchema, content: e.target.value})}
+                    className="w-full h-full p-4 border-0 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder={editorType === 'schema' ? "Enter PlantUML code here..." : "Enter workflow PlantUML code here..."}
+                  />
+                </div>
+              </div>
+
+              {/* Right Pane - Preview */}
+              <div className="w-1/2 flex flex-col">
+                <div className="p-3 bg-gray-50 border-b">
+                  <h3 className="text-sm font-medium text-gray-700">Diagram Preview</h3>
+                </div>
+                <div className="flex-1 p-4 overflow-auto bg-gray-50">
+                  {currentSchema.content.trim() ? (
+                    <div className="flex justify-center">
+                      <img
+                        src={generatePlantUMLUrl(currentSchema.content)}
+                        alt="PlantUML Diagram"
+                        className="max-w-full h-auto"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          const errorDiv = (e.target as HTMLImageElement).parentElement?.querySelector('.error-message');
+                          if (!errorDiv) {
+                            const error = document.createElement('div');
+                            error.className = 'error-message text-red-600 text-sm p-4 bg-red-50 rounded border border-red-200';
+                            error.textContent = 'Error rendering PlantUML diagram. Please check your syntax.';
+                            (e.target as HTMLImageElement).parentElement?.appendChild(error);
+                          }
+                        }}
+                        onLoad={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'block';
+                          const errorDiv = (e.target as HTMLImageElement).parentElement?.querySelector('.error-message');
+                          if (errorDiv) {
+                            errorDiv.remove();
+                          }
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-gray-500 text-sm">Enter PlantUML code to see preview</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
