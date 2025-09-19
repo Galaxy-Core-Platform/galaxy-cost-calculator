@@ -2,7 +2,7 @@
 import type { BoilerplateTemplate } from '../config/boilerplates';
 
 // Get backend URL from environment or use default
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
 export const boilerplateService = {
   // Fetch README.md content from the boilerplate directory
@@ -21,7 +21,7 @@ export const boilerplateService = {
 
     } catch (error) {
       console.error('Error fetching README:', error);
-      return 'Error loading README.md. Make sure the backend server is running on port 3001.';
+      return 'Error loading README.md. Make sure the backend server is running on port 8000.';
     }
   }
 };

@@ -78,6 +78,7 @@ export class ChatClient {
   }
 
   private handleMessage(message: WebSocketMessage) {
+    console.log('Received WebSocket message:', message);
     switch (message.type) {
       case 'bot_message':
         this.messageCallbacks.forEach(cb => cb({
@@ -86,7 +87,7 @@ export class ChatClient {
           sender: 'bot',
           content: message.data.content,
           timestamp: message.data.timestamp || new Date().toISOString(),
-          requires_response: message.data.requires_response,
+          requires_response: message.data.requires_response || false,
           options: message.data.options,
           message_type: message.data.message_type || 'info'
         }));
@@ -107,10 +108,11 @@ export class ChatClient {
       const message = {
         type: 'user_message',
         content: content,
-        message_type: messageType
+        message_type: messageType  // 'answer', 'question', 'info', or 'error'
       };
 
       this.ws.send(JSON.stringify(message));
+      console.log('Sending message to chat:', message);
     } else {
       console.error('WebSocket not connected');
     }
@@ -173,9 +175,9 @@ export async function createChatSession(
       context_type: contextType,
       initial_context: initialContext,
       session_config: {
-        max_questions: 10,
+        max_turns: 100,  // Allow longer conversations
         timeout_minutes: 30,
-        auto_finalize: true,
+        auto_finalize: false,  // Don't auto-finalize for free-form chat
         temperature: 0.7,
         model: "gpt-4o-mini",
         ...sessionConfig

@@ -324,6 +324,10 @@ class NewEntity {
     openSchemaEditor(newSchema);
   };
 
+  const deleteWorkflow = (workflowId: string) => {
+    setPlantUmlWorkflows(prev => prev.filter(w => w.id !== workflowId));
+  };
+
   const createNewWorkflow = () => {
     const newId = `workflow-${Date.now()}`;
     const newWorkflow = {
@@ -377,6 +381,32 @@ end
       setChatClient(client);
       setChatConnected(true);
 
+      // Start polling for messages since WebSocket notifications may not work across processes
+      const pollInterval = setInterval(async () => {
+        try {
+          const response = await fetch(`http://localhost:8000/api/chat/sessions/${session.session_id}/messages`);
+          if (response.ok) {
+            const messages = await response.json();
+            // Update chat messages with any new ones
+            setChatMessages(messages.map((msg: any) => ({
+              message_id: msg.message_id,
+              session_id: msg.session_id,
+              sender: msg.sender,
+              content: msg.content,
+              timestamp: msg.timestamp,
+              requires_response: msg.requires_response,
+              options: msg.options,
+              message_type: msg.message_type
+            })));
+          }
+        } catch (error) {
+          console.error('Error polling messages:', error);
+        }
+      }, 2000); // Poll every 2 seconds
+
+      // Store interval ID for cleanup
+      (client as any).pollInterval = pollInterval;
+
       return client; // Return the client for immediate use
 
     } catch (error) {
@@ -388,21 +418,24 @@ end
   };
 
   const getContextTypeForStep = (step: number): string => {
-    switch (step) {
-      case 1: return 'requirements_improvement';
-      case 2: return 'api_design';
-      case 3: return 'data_modeling';
-      case 4: return 'schema_design';
-      case 5: return 'business_logic';
-      case 6: return 'testing_strategy';
-      default: return 'custom';
-    }
+    // Use 'custom' for all steps to enable free-form chat
+    return 'custom';
   };
 
   const getInitialContextForStep = (step: number) => {
+    // For free-form chat, provide context about the current step and purpose
+    const baseContext = {
+      purpose: 'assistance',
+      step: step,
+      project_name: projectName || '',
+      requirements: requirementsContent || ''
+    };
+
     switch (step) {
       case 1:
         return {
+          ...baseContext,
+          purpose: 'requirements_assistance',
           requirements_text: requirementsContent || '',
           project_name: projectName || '',
           boilerplate: boilerplateTemplate || '',
@@ -410,19 +443,33 @@ end
         };
       case 4:
         return {
-          project_name: projectName || '',
+          ...baseContext,
+          purpose: 'schema_assistance',
           database_type: stepData[4]?.databaseType || 'PostgreSQL',
           existing_schema: stepData[4]?.schema || '',
-          plantuml_schemas: plantUmlSchemas,
-          requirements: requirementsContent || ''
+          plantuml_schemas: plantUmlSchemas
         };
       default:
         return {
-          requirements: requirementsContent || '',
-          project_name: projectName || ''
+          ...baseContext,
+          purpose: 'general_assistance'
         };
     }
   };
+
+  // Cleanup chat on unmount
+  useEffect(() => {
+    return () => {
+      // Cleanup on component unmount
+      if (chatClient) {
+        // Clear polling interval if it exists
+        if ((chatClient as any).pollInterval) {
+          clearInterval((chatClient as any).pollInterval);
+        }
+        chatClient.disconnect();
+      }
+    };
+  }, [chatClient]);
 
   // Load available LLM models on component mount
   useEffect(() => {
@@ -504,22 +551,37 @@ end
   };
 
   // Handle LLM model change
-  const handleModelChange = async (provider: string, model?: string) => {
+  const handleModelChange = async (value: string) => {
     try {
+      // Find the provider info from llmProviders array
+      const providerInfo = llmProviders.find(p => p.value === value);
+      if (!providerInfo) {
+        console.error('Provider not found for value:', value);
+        return;
+      }
+
       const response = await fetch('http://localhost:8000/models/set', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider, model })
+        body: JSON.stringify({
+          value: value,
+          provider: providerInfo.provider,
+          model: value
+        })
       });
 
       if (response.ok) {
         const data = await response.json();
-        setCurrentProvider(provider);
+        setCurrentProvider(value);  // Store the value, not the provider
         setCurrentModel(data.model || '');
 
         // Add to activity log
-        const logEntry = `## LLM Model Changed\n\n**Provider**: ${provider}\n**Model**: ${data.model || 'Default'}\n**Timestamp**: ${new Date().toLocaleString()}`;
+        const logEntry = `## LLM Model Changed\n\n**Provider**: ${providerInfo.provider}\n**Model**: ${data.model || 'Default'}\n**Timestamp**: ${new Date().toLocaleString()}`;
         setActivityLog(prev => [logEntry, ...prev]);
+      } else {
+        const errorText = await response.text();
+        console.error('Failed to change LLM model:', response.status, errorText);
+        alert('Failed to change LLM model. Please try again.');
       }
     } catch (error) {
       console.error('Failed to change LLM model:', error);
@@ -2112,9 +2174,9 @@ describe('UserService', () => {
             {['Summary', 'Requirements', 'Process Workflows', 'Advice', 'Plan', 'Boilerplate', 'Activity Log'].map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab === 'Activity Log' ? 'log' : (tab === 'Process Workflows' ? 'process workflows' : tab.toLowerCase()) as any)}
+                onClick={() => setActiveTab(tab === 'Activity Log' ? 'log' : (tab === 'Process Workflows' ? 'process workflows' : (tab === 'Advice' ? 'recommendations' : tab.toLowerCase())) as any)}
                 className={`flex-1 px-3 py-2.5 text-[10px] font-medium transition ${
-                  activeTab === (tab === 'Activity Log' ? 'log' : (tab === 'Process Workflows' ? 'process workflows' : tab.toLowerCase()))
+                  activeTab === (tab === 'Activity Log' ? 'log' : (tab === 'Process Workflows' ? 'process workflows' : (tab === 'Advice' ? 'recommendations' : tab.toLowerCase())))
                     ? 'text-indigo-600 border-b-2 border-indigo-600 bg-white'
                     : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
                 }`}
@@ -2282,12 +2344,24 @@ describe('UserService', () => {
                             {workflow.content.split('\n').length} lines
                           </p>
                         </div>
-                        <button
-                          onClick={() => openWorkflowEditor(workflow)}
-                          className="px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition"
-                        >
-                          Edit
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => openWorkflowEditor(workflow)}
+                            className="px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`Delete workflow "${workflow.name}"?`)) {
+                                deleteWorkflow(workflow.id);
+                              }
+                            }}
+                            className="px-3 py-1.5 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
